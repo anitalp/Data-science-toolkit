@@ -1,2 +1,2 @@
 # Data-science-toolkit
-Useful scripts with algorithms in R or python (from data cleaning/modelling to evaluation)
+Useful DS algorithms in R & Python (from data cleaning & modelling to evaluation)
