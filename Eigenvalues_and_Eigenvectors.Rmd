@@ -1,0 +1,143 @@
+
+EIGENVALUES AND EIGENVECTORS
+================================
+
+From wikipedia:
+
+**Escalamiento multidimensional**
+
+El escalado multidimensional (EMD) (en inglés, multidimensional scaling MDS) se refiere al conjunto de técnicas estadísticas utilizada habitualmente en marketing y ciencias sociales para la visualización y exploración de datos. Es un procedimiento para tomar preferencias y percepciones de los encuestados y representarlos en un diagrama visual. Estos diagramas, llamados mapas perceptuales tienen generalmente dos dimensiones, pero pueden representarse en más de dos. Los consumidores potenciales tienen que comparar pares de productos y hacer juicios sobre sus similitudes. Mientras otras técnicas (como análisis factorial, análisis discriminante y análisis conjunto) obtienen dimensiones de las respuestas a los atributos de los productos identificados por el investigador, MDS obtiene las dimensiones de los juicios de los encuestados sobre la similitud de los productos. Esto supone una ventaja importante pues los resultados no dependen de los juicios de los investigadores. No es necesaria una lista de atributos que debe ser mostrada a los encuestados. Las dimensiones resultantes vienen de los juicios de los encuestados sobre pares de productos. Gracias a estas ventajas, MDS es la técnica más comúnmente utilizada en mapeado perceptual.
+
+Índice  [ocultar] 
+1. Procedimiento del Mapeado Perceptual
+2. Aplicaciones
+2.1	Marketing
+2.2	Comparación y ventajas
+3. Fuentes externas
+
+Procedimiento del Mapeado Perceptual[editar]
+
+Existen diferentes pasos que hay que dar para llevar a cabo una investigación de MDS:
+Formulación del problema - ¿Qué variables queremos comparar? ¿Cuántas variables quieres comparar? Más de 20 sería engorroso. Menos de 8 (4 pares) no arrojaría resultados fiables. ¿Con qué propósito se va a realizar el estudio?
+Obtención de los datos. Los encuestados responden una serie de preguntas. Para cada par de productos ellos tienen que puntuar la similitud (normalmente, en una escala Likert de 7 puntos de muy similar a muy diferente). La primera pregunta podría ser entre Coca-Cola/Pepsi por ejemplo, la siguiente entre Coca-Cola/Hires (cerveza), la siguiente entre Pepsi/Dr Pepper, la siguiente entre Dr Pepper/Hires, etc. El número de preguntas es una función del número de marcas y puede ser calculado como Q = N (N - 1) / 2 donde Q es el número de preguntas y N es el número de marcas. Esta aproximación se llama “Datos de percepción : enfoque directo”. Existen otras dos formas. La "Datos de percepción: enfoque derivado" en la que los productos se descomponen en atributos que se puntúan en una escala de diferencias semánticas. La otra es la "Enfoque de datos de preferencia" en que los encuestados son preguntados sobre sus preferencias y sobre similitudes
+.
+Manejo del programa estadístico MDS - El software para conducir el proceso está disponible en la mayoría de las aplicaciones estadísticas. A menudo, se puede elegir entre Metric MDS (que trata con datos de ratio de nivel o intervalo), y Nonmetric MDS (que trata con datos originales). Los investigadores deben decidir el número de dimensiones que quieren que el ordenador cree. Cuantas más dimensiones haya, más fiable será la estadística pero más difícil será interpretar el resultado
+.
+Mapeo de los resultados y definición de las dimensiones - El programa estadístico (o un módulo relacionado) mapeará los resultados. El mapeo situará cada producto normalmente, en un espacio de dos dimensiones. La proximidad de productos a los demás indicará bien lo similares que son o lo preferidos que resultan, dependiendo de qué sistema fue utilizado. Las dimensiones deben ser clasificadas por el investigador. Ello requiere juicio subjetivo lo que supone un reto. Luego, los resultados deben ser interpretados.
+Testar la validez y fiabilidad de los resultados . Determinar qué proporción o varianza de los datos de la escala pueden ser tomados en cuenta para el procedimiento MDS. Un R-cuadrado de 0.6 es considerado el nivel mínimo aceptable. Otros tests posibles son Kruskal’s Stress, tests de división de datos, tests de estabilidad de datos (i.e.: eliminando una marca), y fiabilidad test-retest.
+
+Aplicaciones[editar]
+
+Se utiliza para la representación visual de datos en más de una dimensión (si son más de tres dimensiones, se requiere más de un gráfico).
+Con ello se puede encontrar qué factores (dimensiones) subyacen bajo los datos obtenidos en un estudio. Se aplica en estudios sobre cognición, psicofísica, psicometría, marketing y ecología.
+Marketing[editar]
+
+En marketing, el EMD es una técnica estadística para averiguar las preferencias y percepciones de los encuestados a la hora de evaluar y comparar varios productos, representando los datos obtenidos sobre una gráfica visual, llamada mapa perceptual.
+
+Comparación y ventajas[editar]
+
+
+Se pide a clientes potenciales que comparen pares de productos y haga juicios sobre su similaridad. Aunque otras técnicas (como el análisis factorial, análisis discriminante y el análisis conjunto) también sirven para reducir los datos a unos pocos factores o dimensiones, el EMD obtiene el grado de similaridad entre los productos. Esto es una importante ventaja, ya que no depende de los juicios de los investigadores. No se requiere una lista de atributos que haya que mostrar a los encuestados, son los encuestados los que deciden indirectamente qué dimensiones utilizan para evaluar un producto.
+
+
+````{r}
+
+# 
+# Eigenvalues and Eigenvectors in R
+# Calculating eigenvalues and eigenvectors for age- and stage-structured populations is made very simple by computers. Here I show how to calculate the eigenvalues and eigenvectors for the right whale population example from class.
+# 
+# The first thing we need to do is to define the transition matrix. Using the function c(), let’s put all of the entries in the transition matrix into one long vector - since there are four stages, my vector will have 16 entries in it. We will put the entries in row-wise, so the first four entries will be the top row of the transition matrix, the next four entries will be the second row, and so on. Note that I have put the entries on separate lines to make it clear how they fill in the matrix, but this is not require
+
+entries <- c(    0,       0,      0,   0.45,
+              0.92,    0.86,      0,      0,
+                 0,    0.08,    0.8,   0.83,
+                 0,    0.02,   0.19,      0)
+
+#  [1] 0.00 0.00 0.00 0.45 0.92 0.86 0.00 0.00 0.00 0.08 0.80 0.83 0.00 0.02 0.19 0.00
+
+# Now I want to put those entries into a matrix. I can use the function matrix() to do this. I am going to specify two options to this function: nrow, which tells matrix how many rows the function will have, and byrow, which tells matrix to put the first four entries into the first row, rather than the first column.
+
+right_whale <- matrix(entries, nrow=4, byrow=TRUE)
+right_whale
+#     [,1] [,2] [,3] [,4]
+# [1,] 0.00 0.00 0.00 0.45
+# [2,] 0.92 0.86 0.00 0.00
+# [3,] 0.00 0.08 0.80 0.83
+# [4,] 0.00 0.02 0.19 0.00
+
+#Now, to calculate the eigenvalues and eigenvectors, I can simply use the function eigen():
+
+## Calculate the eigenvalues and right eigenvectors
+whale_eigen <- eigen(right_whale)
+whale_eigen 
+
+# $values
+# [1]  1.0091  0.8080 -0.1545 -0.0026
+# 
+# $vectors
+#        [,1]   [,2]  [,3]   [,4]
+# [1,] -0.076 -0.050 -0.69  0.682
+# [2,] -0.472  0.876  0.63 -0.727
+# [3,] -0.861 -0.471 -0.26  0.077
+# [4,] -0.172 -0.089  0.24 -0.004
+
+
+
+
+# Note that whale_eigen is a list with two elements (denoted by the “$”), values and vectors. As you might expect, whale_eigen$values are the four eigenvalues, stored as a vector. The leading eigenvalue is the first entry in the vector. whale_eigen$vectors gives the corresponding right eigenvectors, stored as a matrix. The right eigenvector associated with the dominant eigenvalue is stored in the first column of the matrix.
+# 
+# So, for the right whale population, the leading eigenvalue is
+
+whale_eigen$values[1]
+# 1.009
+
+#and the corresponding stable stage distribution (after rescaling so the elements of the vector sum to 1) is
+
+## dividing by the sum of the elements rescales so the entries sum to 1
+stable_stage <- whale_eigen$vectors[,1]/sum(whale_eigen$vectors[,1]) 
+stable_stage
+
+#0.048 0.298 0.545 0.108
+
+# To find the reproductive values, we need to find the left eigenvectors. It turns out that the left eigenvectors of any matrix are equal to the right eigenvectors of the transpose matrix. So, if we take the transpose and use eigen(), we can easily find the left eigenvector, and then the reproductive values:
+
+## use t() to compute the transpose
+t(right_whale)
+#     [,1] [,2] [,3] [,4]
+# [1,] 0.00 0.92 0.00 0.00
+# [2,] 0.00 0.86 0.08 0.02
+# [3,] 0.00 0.00 0.80 0.19
+# [4,] 0.45 0.00 0.83 0.00
+
+## calculate the eigenvalues and eigenvectors for the transpose
+eigen(t(right_whale)) # note that eigenvalues are the same
+
+# $values
+# [1]  1.0091  0.8080 -0.1545 -0.0026
+# 
+# $vectors
+#      [,1]   [,2]    [,3]    [,4]
+# [1,] 0.36 -0.691  0.0235  0.3866
+# [2,] 0.39 -0.607 -0.0039 -0.0011
+# [3,] 0.57  0.391 -0.1952 -0.2124
+# [4,] 0.63  0.016  0.9805  0.8974
+
+
+
+## left eigenvector
+eigen(t(right_whale))$vectors[,1]
+## [1] 0.3561 0.3905 0.5709 0.6283
+
+## divide by the first non-zero entry to calculate *relative* reproductive values
+repro_value <- eigen(t(right_whale))$vectors[,1]/eigen(t(right_whale))$vectors[1,1]
+repro_value
+
+## [1] 1.000 1.097 1.603 1.765
+
+#To find the mean reproductive value, we need to take the inner product of the reproductive values and the stable stage distribution.
+
+## inner products in R are calculated using %*%
+repro_value %*% stable_stage
+##       [,1]
+## [1,] 1.441
+`````

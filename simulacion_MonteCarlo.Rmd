@@ -1,0 +1,117 @@
+Simulación de Monte Carlo
+========================================================
+
+DEFINICIÓN
+
+Monte Carlo methods (or Monte Carlo experiments) are a broad class of computational algorithms that rely on repeated random sampling to obtain numerical results; i.e., by **running simulations many times over in order to calculate those same probabilities heuristically** just like actually playing and recording your results in a real casino situation: hence the name.
+
+The modern version of the Monte Carlo method was invented in the late 1940s by Stanislaw Ulam, while he was working on nuclear weapon projects at the Los Alamos National Laboratory. It was named, by Nicholas Metropolis, after the Monte Carlo Casino, where Ulam's uncle often gambled.
+
+APLICACIONES
+
+- Es muy usada en temas de **optimización de precios** (elasticidad), para simular por ejemplo los diferentes precios a los que puede estar un producto
+
+INTRODUCCIÓN
+
+El inicio del uso de la palabra "simulación" en su concepción actual puede situarse a mediados del siglo XX con el desarrollo del método de Montecarlo. Su uso como herramienta de investigación proviene de los trabajos realizados en física nuclear durante la Segunda Guerra Mundial (John Von Newmann y Stanislaw Ulam) en el Laboratorio Nacional de Los Álamos en Estados Unidos. 
+
+La definición que mejor recoge el enfoque que a lo largo de la unidad didáctica se hará de ella es la de Shannon de 1975: "Simulación es el proceso de diseñar un modelo a partir de un sistema real y llevar a cabo experiencias con dicho modelo, con la finalidad de aprender el comportamiento del sistema o de evaluar diversas estrategias para el funcionamiento del sistema". 
+
+La simulación es una técnica que sirve para analizar el comportamiento de un sistema conocido en unas determinadas circunstancias. 
+
+Los modelos de simulación, una vez construidos, no se "resuelven" como se hace, por ejemplo, con un modelo de programación lineal, sino que se "hacen funcionar". Por lo tanto, lo que se obtiene de ellos no es una "solución" en el sentido estricto, sino una descripción de cómo funciona el sistema representado por el modelo, cuando tienen lugar ciertas circunstancias señaladas por el experimentador. 
+
+Debe quedar muy claro que un modelo de simulación no es más que un procedimiento que permite recopilar información para un mejor conocimiento de un sistema bajo unas determinadas condiciones establecidas previamente por el diseñador del model. 
+
+VENTAJAS E INCONVENIENTES DEL USO DE LA SIMULACIÓN 
+
+Para establecer las **ventajas**, analicemos una serie de situaciones en las cuales es apropiado el uso de la simulación: 
+
+* 1.- Cuando no existe una formulación matemática del sistema que se trata de estudiar, o bien existe la formulación, pero no es resoluble analíticamente. 
+
+Un ejemplo que pone de manifiesto esta situación es la construcción de un aeropuerto, para que tenga cubiertos adecuadamente todos los servicios sin que los hipotéticos pasajeros tengan que sufrir incomodidades, pero que a su vez no sobrepase las necesidades reales, de tal forma que no se encarezca el proyecto y su posterior mantenimiento sin necesidad. 
+
+* 2.- Existen el modelo y los métodos de resolución, pero los procedimientos son tan arduos y laboriosos que resulta más sencilla y menos costosa la simulación. 
+
+Así, por ejemplo, si se trata de asignar tareas a una serie de máquinas o de personas, encontrar una solución es posible analíticamente (algoritmo húngaro), siempre que el número de tareas a asignar no sea muy grande ya que en ese caso resultaría inviable o, al menos, poco económico. 
+
+* 3.- Se desea experimentar con un modelo antes de construir el sistema. 
+
+Un simulador de vuelo reproduce en tierra las condiciones exactas de vuelo, lo cual permite a las tripulaciones habituarse a las distintas maniobras antes de pasar al avión mismo. 
+
+* 4.- A veces es imposible experimentar sobre el propio sistema. 
+
+En el caso de las misiones espaciales se realizan previamente multitud de simulaciones acerca de posibles eventualidades para poder saber perfectamente cómo actuar en cada caso. 
+
+* 5.- En otros casos, la experimentación es posible, pero razones éticas lo impiden. Ejemplos típicos de esta situación los constituyen los sistemas biológicos humanos. 
+
+* 6.- Si se quiere recoger información acerca de un sistema que evoluciona muy lentamente, la simulación permitirá reducir la escala de tiempo. 
+
+En la gestión forestal, por ejemplo, si se desea hacer una comparación entre diversos métodos de tala de árboles, se puede construir un modelo del bosque y simular la evolución del modelo bajo diferentes políticas. El modelo de simulación se desarrolla más rápidamente que el crecimiento real de los árboles. 
+
+Conviene destacar también, algunos **inconvenientes** que presenta la simulación: 
+
+* 1.- La construcción de un modelo de simulación de un sistema puede llegar a ser algo muy complejo, muy costoso y requerir mucho tiempo. Un buen modelo de un sistema socioeconómico puede requerir de 8 a 10 años de trabajo de un equipo interdisciplinario. 
+
+* 2.- Es frecuente que ciertos elementos o relaciones del sistema sin importancia aparente se desprecien a la hora de elaborar el modelo y, a causa de ello los resultados de la simulación sean falsos. 
+
+* 3.- Es muy difícil conocer el grado de imprecisión de los resultados de la simulación. 
+
+Para poder utilizar técnicas de simulación es necesario generar valores de las diferentes variables aleatorias que intervienen en el sistema simulado. En este sentido os basta saber que se trabaja de forma diferente según se trate de variables discretas o de variables continuas.
+
+
+PROCESO
+
+Any Monte Carlo Simulation can be broken into two parts. First, we need code to carry out the random experiment we're interested in on the computer. Depending on the problem, the details of this step will vary. For this tutorial we'll work with a simple but flexible function called sample that allows us to simulate discrete experiments like rolling dice, drawing from an urn, or flipping a coin. In later tutorials you'll learn some other functions for constructing more complicated random experiments. Second, we need code to repeat something over and over. This step will always be the same, regardless of the details of the first step: we'll use the function replicate.
+
+
+
+```{r, echo=TRUE}
+
+
+#### SAMPLE
+
+#Let's look at an example in which I simulate drawing two marbles from a bowl containing one red, one blue and one green marble, without replacement:
+
+marbles <- c('red', 'blue', 'green')
+sample(x = marbles, size = 2, replace = FALSE)
+
+
+#In the preceding example, marbles was a character vector, but we can also use sample with a numeric vector. This example draws 5 numbers between 1 and 10 without replacement:
+
+sample(x = 1:10, size = 5, replace = FALSE)
+sample(x = 1:10, size = 15, replace = TRUE)
+
+
+#Probability theory was initially developed in the 16th and 17th centuries to solve problems involving gambling games. Many of these problems involved rolling some number of fair, six-sided dice. We can simulate one such die roll in R as follows:
+
+sample(1:6, size = 1, replace = TRUE)
+
+#Rolling one die is a pretty boring example, but we can use it to build up more interesting ones. What if we wanted to roll two fair, six-sided dice and compute their sum?
+sum(sample(1:6, size = 2, replace = TRUE))
+
+
+##### REPLICATE
+
+#1.Create a function
+two.dice <- function(){
+  
+  dice <- sample(1:6, size = 2, replace = TRUE)
+  return(sum(dice))
+}
+
+#2: Call The Function Repeatedly Using replicate
+
+#To use replicate, we need to specify two arguments: n tells R how many times we want to repeat something and expr is the R command we want to repeat. For example
+
+replicate(n = 10, expr = two.dice())
+
+
+#As mentioned above, notice that you will, in general, get a different result each time you run this. That's because R is simulating a random experiment.
+
+#Note: if the function we use as the argument expr returns a scalar (i.e. a single value), then replicate will return a vector. If our function returns a vector, replicate will return a matrix.
+
+
+replicate(10, sample(1:10, 5, replace = FALSE))
+
+````

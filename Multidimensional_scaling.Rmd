@@ -1,0 +1,188 @@
+Multidimensional Scaling
+========================
+
+###Importante:
+
+El escalamiento multidimensional es una técnica de análisis multivariante de los métodos interdependientes cuyo propósito consiste en representar los objetos en un espacio de pocas dimensiones.
+
+* Minimiza las desviaciones cuadradas entre las proximidades de los objetos
+* Minimiza las distancias euclídeas en el espacio de pocas dimensiones
+
+####Número de dimensiones óptimo:
+
+* Medir Goodness of fit:
+
+Cuanto más cercano a uno más overfitting, por tanto menos necesito añadir dimensiones.
+
+````{r}
+cmdscale(eurodist, 1, eig=TRUE)$GOF
+#[1] 0.4690928 0.5401388
+cmdscale(eurodist, 2, eig=TRUE)$GOF
+#[1] 0.7537543 0.8679134
+cmdscale(eurodist, 3, eig=TRUE)$GOF
+#[1] 0.7904600 0.9101784
+````
+
+* Observar eigenvalues:
+
+Cuando se vuelven más pequeños no necesito añadir dimensiones.
+
+
+NOTA: Ver punto EVALUACIÓN en este documento.
+
+
+###Explicación:
+
+Multidimensional Scaling (MDS), is a set of multivariate data analysis methods that are used to analyze **similarities or dissimilarities** in data. One of the nice features of MDS is that it allows us to represent the (dis)similarities among pairs of objects as **distances between points in a low-dimensional space.** Put another way, MDS allows us to visualize the (dis)similarities in a low-dimensional space for exploration and inspection purposes.
+
+The general approach behind MDS consists of calculating a (dis)similarity matrix among pairs of objects (i.e. observations, individuals, samples, etc), and then apply one of the several MDS “models” to obtain the low-dimensional representation. The MDS model to be applied depends on the type of data, and consequently, the type of (dis)similarity measurement that the analyst decides to us
+e.
+
+**Metric Multidimensional Scaling**
+Depending on the chosen measurement and the obtained (dis)similarity matrix, MDS can be divided in two main approaches: **metric and nonmetric**. If the analyzed matrix is based on a metric distance, we talk about metric MDS, otherwise we talk about nonmetric MDS.
+
+**Metric multidimensional scaling,** also known as Principal Coordinate Analysis or Classical Scaling, transforms a **distance matrix **into a set of coordinates such that the (Euclidean) distances derived from these coordinates approximate as well as possible the original distances (do not confuse Principal Coordinate Analysis with Principal Component Analysis). In other words, the advantage of working with metric MDS, is that the relationships among objects can, in most cases, be fully represented in an Euclidean space.
+
+**Metric Multidimensional Scaling in R**
+R has a number of ways to perform metric MDS. The following list shows you 7 different functions to perform metric MDS (with their corresponding packages in parentheses):
+
+* cmdscale() (stats by R Development Core Team)
+* smacofSym() (smacof by Jan de Leeuw and Patrick Mair)
+* wcmdscale() (vegan by Jari Oksanen et al)
+* pco() (ecodist by Sarah Goslee and Dean Urban)
+* pco() (labdsv by David W. Roberts)
+* pcoa() (ape by Emmanuel Paradis et al)
+* dudi.pco() (ade4 by Daniel Chessel et al)
+
+You should know that all the previous functions require a distance matrix as the main argument to work with. If you don’t have your data in (dis)similarity matrix format, you can calculate the distance matrix with the function dist(). This is the “work-horse” function in R for calculating distances (e.g. euclidean, manhattan, binary, canberra and maximum). In addition, some of the packages mentioned above provide their own functions for calculating other types of distances.
+
+
+
+````{r}
+
+####Data eurodist
+#We will use the dataset eurodist that gives the road distances (in km) between 21 cities in Europe. Notice that eurodist is already an object of class "dist" (matrix distance). You can inspect the first 5 elements like so:
+
+# convert eurodist to matrix
+euromat = as.matrix(eurodist)
+
+# inspect first five elements
+
+euromat[1:5, 1:5]
+##           Athens Barcelona Brussels Calais Cherbourg
+## Athens         0      3313     2963   3175      3339
+## Barcelona   3313         0     1318   1326      1294
+## Brussels    2963      1318        0    204       583
+## Calais      3175      1326      204      0       460
+## Cherbourg   3339      1294      583    460         0
+
+#The goal is to apply metric MDS to get a visual representation of the distances between European cities.
+
+
+#####1) MDS with cmdscale()
+
+#The most popular function to perform a classical scaling is cmdscale() (which comes with the default distribution of R). Its general usage has the following form:
+  
+  
+#cmdscale(d, k = 2, eig = FALSE, add = FALSE, x.ret = FALSE)
+  
+# 1) MDS 'cmdscale'
+  
+mds1 = cmdscale(eurodist, k = 2, eig=FALSE)
+
+mds1
+# plot
+plot(mds1[,1], mds1[,2], type = "n", xlab = "", ylab = "", axes = FALSE,
+     main = "cmdscale (stats)")
+text(mds1[,1], mds1[,2], labels(eurodist), cex = 0.9, xpd = TRUE)
+
+# As you can see, the obtained graphic allows us to represent the distances between cities in a two-dimensional space. However, the representation is not identical to a geographical map of Europe: Athens is in the north while Stockholm is in the south. This “anomaly” reflects the fact that the representation is not unique; if we wanted to get a more accurate geographical representation, we would need to invert the vertical axis.
+
+
+
+#### 3 DIMENSIONS
+
+mds2 = cmdscale(eurodist, k = 3, eig=FALSE)
+mds2
+# plot
+plot(mds2[,2], mds2[,3], type = "n", xlab = "", ylab = "", axes = FALSE,
+     main = "cmdscale (stats)")
+text(mds2[,2], mds2[,3], labels(eurodist), cex = 0.9, xpd = TRUE)
+
+
+
+
+#### 4 DIMENSIONS
+
+mds3 = cmdscale(eurodist, k = 4, eig=FALSE)
+mds3
+# plot
+plot(mds3[,3], mds3[,4], type = "n", xlab = "", ylab = "", axes = FALSE,
+     main = "cmdscale (stats)")
+text(mds3[,3], mds3[,4], labels(eurodist), cex = 0.9, xpd = TRUE)
+
+
+#### EVALUATION
+
+##### QUÉ NUMERO DE DIMENSIONES ES EL APROPIADO??(generalmente 2) CÓMO MEDIRLO??
+# You can look at the "GOF" component of the result ("goodness of fit"), if you specify the number of dimensions. It returns two numbers, that should be equal unless the distance matrix is not positive.
+# 
+# You can also directly look at the eigenvalues: when they become small, you have enough dimensions.
+# 
+# In the following example, two dimensions seem sufficient.
+
+cmdscale(eurodist, 1, eig=TRUE)$GOF
+#[1] 0.4690928 0.5401388
+cmdscale(eurodist, 2, eig=TRUE)$GOF
+#[1] 0.7537543 0.8679134
+cmdscale(eurodist, 3, eig=TRUE)$GOF
+#[1] 0.7904600 0.9101784
+cmdscale(eurodist, 4, eig=TRUE)$GOF
+#[1] 0.82 0.94
+
+r <- cmdscale(eurodist, eig=TRUE)
+plot(cumsum(r$eig) / sum(r$eig), 
+       type="h", lwd=5, las=1, 
+       xlab="Number of dimensions", 
+       ylab=expression(R^2))
+plot(r$eig, 
+       type="h", lwd=5, las=1, 
+       xlab="Number of dimensions", 
+       ylab="Eigenvalues")
+
+
+#The goodness of fit increases to 1 as you add more dimensions; it can be interpreted as an R-squared. But if it is too high, you are overfitting the data. As mentioned in a previous comment, cmdscale only does linear MDS: if you specify the number of dimensions, the result is just truncated. MDS (linear multi-dimensional scaling) and PCA (principal component analysis) are identical: the only difference is that MDS starts with a distance matrix.
+
+
+
+
+#MDS is also implemented in the igraph package as layout.mds.
+
+
+library(igraph)
+g <- graph.full(nrow(euromat))
+V(g)$label <- labels(eurodist)
+layout <- layout.mds(g, dist = as.matrix(euromat))
+plot(g, layout = layout, vertex.size = 3)
+
+
+
+
+#Otro dataset de Australia
+
+dist.au <- read.csv("http://rosetta.reltech.org/TC/v15/Mapping/data/dist-Aus.csv")
+row.names(dist.au) <- dist.au[, 1]
+dist.au <- dist.au[, -1]
+dist.au
+city.names <- c("Adelaide", "Alice Springs", "Brisbane", "Darwin", "Hobart", 
+    "Melbourne", "Perth", "Sydney")
+
+library(igraph)
+g <- graph.full(nrow(dist.au))
+V(g)$label <- city.names
+layout <- layout.mds(g, dist = as.matrix(dist.au))
+plot(g, layout = layout, vertex.size = 3)
+
+
+
+`````

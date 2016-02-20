@@ -1,0 +1,20 @@
+Dimensionality reduction
+========================
+
+
+##Principal Component Analysis (PCA) (see Rmd)
+
+##Singular value descomposition (SVD)
+
+
+
+Information Retrieval
+========================
+
+##TF-IDF
+
+##Latent Dirichlet Allocation (LDA)
+
+##Okapi BM25
+
+##PageRank

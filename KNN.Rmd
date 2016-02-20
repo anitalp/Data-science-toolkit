@@ -1,0 +1,198 @@
+K-nearest neighbord
+========================
+
+##Important:
+
+
+In pattern recognition, the k-Nearest Neighbors algorithm (or k-NN for short) is a **no-parametric** method used for classification and regression.[1] In both cases, the input consists of the k closest training examples in the feature space. The output depends on whether k-NN is used for classification or regression:
+
+* In **k-NN classification**, the output is a **class membership**. An object is classified by a majority vote of its neighbors, with the object being assigned to the class most common among its k nearest neighbors (k is a positive integer, typically small). If k = 1, then the object is simply assigned to the class of that single nearest neighbor.
+
+* In **k-NN regression**, the output is the property value for the object. This value is the **average of the values of its k nearest neighbors***.
+k-NN is a type of instance-based learning, or **lazy learning**, where the function is only approximated locally and all computation is deferred until classification. The k-NN algorithm is among the simplest of all machine learning algorithms.
+
+Both for classification and regression, it can be useful to assign weight to the contributions of the neighbors, so that the nearer neighbors contribute more to the average than the more distant ones. For example, a common weighting scheme consists in giving each neighbor a weight of 1/d, where d is the distance to the neighbor.[2]
+
+The neighbors are taken from a set of objects for which the class (for k-NN classification) or the object property value (for k-NN regression) is known. This can be thought of as the training set for the algorithm, though no explicit training step is required.
+A shortcoming of the k-NN algorithm is that it is sensitive to the local structure of the data. The algorithm has nothing to do with and is not to be confused with k-means, another popular machine learning technique.
+
+
+**KNN advantages**:
+
+* it is automatically **non-linear**, it can detect linear or non-linear distributed data, it tends to perform very well with a lot of data points.
+
+**KNN disadvantages**:
+
+* KNN needs to be carefully tuned, the choice of K and the metric (distance) to be used are critical. 
+* As Michal Illich mentioned for many datapoints KNN has performance problems. If you are in a very low dimensional space you can use a RP-Tree or KD-Tree to improve performance, if you have a higher number of dimensions then you need an approximation to the nearest neighbors problems and whenever we use an approximation we have to think if KNN with the NN approximation is still better than other algorithms.
+* KNN is also very **sensitive to bad features** (attributes) so feature selection is also important. KNN is also **sensitive to outliers** and removing them before using KNN tends to improve results.
+
+**Determining the umber of K**
+
+K depende del bias-variance trade off
+
+Using less neighbors would actually lead to overfitting. 
+
+For example, consider a binary classifier with a clear nonlinear relationship. If there were outlying positive classified sample data point in a region that is generally negative, a  k=1 prediction for that region would evaluate positive as well as a result of overfitting (when we would want a negative prediction). Using a higher  k  value would address this problem and have less variance.
+
+In k-nearest neighbors, the k represents the number of neighbors who have a vote in determining a new player's position. Take the example where k =3. If I have a new basketball player who needs a position, I take the 3 basketball players in my dataset with measurements closest to my new basketball player, and I have them vote on the position that I should assign the new player.
+
+
+The KNN method is a non-parametric statistical classification technique which supposes that no statistical distribution is fitted to the data of each class. Hence this method tries to predict the class of new data points based on the nearest neighbors. The value of K is extremely training-data dependent, changing the position of a few training data may led to a significant loss of performance. Hence this method is not stable particularly in class borders. However, the **K-fold cross-validation** should be useful to find the K value which led to the highest classification generalizability.
+
+Ver clustering:
+- BIC
+- Elbow sum of squared 
+
+
+####How is the k-nearest neighbor algorithm different from k-means clustering?
+
+**K-nearest neighbors** is a classification algorithm, which is a subset of supervised learning.
+
+**K-means** is a clustering algorithm, which is a subset of unsupervised learning.
+
+If I have a dataset of basketball players, their positions, and their measurements, and I want to assign positions to basketball players in a new dataset where I have measurements but no positions, I might use k-nearest neighbors.
+
+On the other hand, if I have a dataset of basketball players who need to be grouped into k distinct groups based off of similarity, I might use k-means.
+
+Correspondingly, the K in each case also mean different things! In k-nearest neighbors, the k represents the number of neighbors who have a vote in determining a new player's position. Take the example where k =3. If I have a new basketball player who needs a position, I take the 3 basketball players in my dataset with measurements closest to my new basketball player, and I have them vote on the position that I should assign the new player.
+
+The k in k-means means the number of clusters I want to have in the end. If k = 5, I will have 5 clusters, or distinct groups, of basketball players after I run the algorithm on my dataset.
+
+In sum, two different algorithms with two very different end results, but the fact that they both use k can be very confusing! 
+
+
+
+
+
+
+Bibliografía:
+
+
+
+http://www.analyticsvidhya.com/blog/2014/10/introduction-k-neighbours-algorithm-clustering/
+
+http://www.analyticsvidhya.com/blog/2015/08/learning-concept-knn-algorithms-programming/
+
+``````{r prostate, cache=TRUE}
+
+
+mydata <- esoph
+summary(mydata)
+str(mydata)
+head(mydata)
+
+
+#The data set contains patients who have been diagnosed with either Malignant (M) or Benign (B) cancer
+
+table(mydata$ncases)  # it helps us to get the numbers of patients
+
+mydata$diagnostico <- ifelse((mydata$ncases >= 1), "Malignant","Benign")
+
+
+
+
+round(prop.table(table(mydata$diagnostico)) * 100, digits = 1)  # it gives the result in the percentage form rounded of to 1 decimal place( and so it's digits = 1)
+
+
+normalize <- function(x) { return ((x - min(x)) / (max(x) - min(x))) }
+
+
+a <- transform(mydata, age = as.integer(substring(mydata$agegp,1,2)), tobacco = as.integer(substring(mydata$alcgp,1,1))
+               ,tobgp = as.integer(substring(mydata$tobgp,1,1)))
+
+a<- a[-1]
+a <- a[-1]
+
+
+prc_train_labels <- a[1:50,4]
+
+prc_test_labels <- a[51:88,4]
+
+a <- a[-4]
+
+prc_n <- as.data.frame(lapply(a, normalize))
+
+#prc_n_all <- cbind(mydata, prc_n)
+prc_n_all_final <- prc_n
+
+
+prc_train <- prc_n_all_final[1:50,]
+prc_test <- prc_n_all_final[51:88,]
+
+`````
+
+###Determining number of K 
+
+####Gaussian mixture models (model based): Bayesian Information Criterion for Expectation-Maximization
+
+Determine the optimal model and number of clusters according to the Bayesian Information Criterion for expectation-maximization, initialized by hierarchical clustering for parameterized Gaussian mixture models.
+
+Punto donde se unan las líneas como K clusters.
+
+
+```{r, cache=TRUE}
+
+# See http://www.jstatsoft.org/v18/i06/paper
+# http://www.stat.washington.edu/research/reports/2006/tr504.pdf
+#
+library(mclust)
+# Run the function to see how many clusters
+# it finds to be optimal, set it to search for
+# at least 1 model and up 20.
+d_clust <- Mclust(prc_train, G=1:15)
+d_clust
+m.best <- dim(d_clust$z)[2]
+cat("model-based optimal number of clusters:", m.best, "\n")
+# 4 clusters
+plot(d_clust)
+
+`````
+
+####Elbow in the sum of squared error (SSE)
+
+Seleccionamos el número de clusters como el punto de inflexión.
+
+
+```{r, cache=TRUE}
+
+# Determine number of clusters
+wss <- (nrow(prc_train)-1)*sum(apply(prc_train,2,var))
+
+for (i in 2:15) wss[i] <- sum(kmeans(prc_train, centers=i)$withinss)
+
+plot(1:15, wss, type="b", xlab="Number of Clusters",
+  ylab="Within groups sum of squares")
+
+#bbvadata: punto inflexion entre 7 y 9
+
+````
+
+
+````{r}
+
+#The value for k is generally chosen as the square root of the number of observations.
+
+k = as.integer(sqrt(dim(mydata)[1]))
+
+library(class)
+
+
+
+
+
+prc_test_pred <- knn(train = prc_train, test = prc_test,cl = prc_train_labels, k=5)
+
+prc_test_pred
+
+summary(prc_test_pred)
+
+library(gmodels)
+
+CrossTable(x = sample(prc_train_labels,35), y = sample(prc_test_pred,35), prop.chisq=FALSE)
+
+
+
+````
+
+

@@ -1,0 +1,334 @@
+Markov Chain
+========================
+
+
+**Bibliography**
+
+http://alexhwoods.com/2015/09/05/markov-chains-in-r/
+
+http://math.stackexchange.com/questions/587559/forming-the-transition-matrix-for-markov-chain-given-a-word-description-of-tran
+
+https://cran.r-project.org/web/packages/markovchain/vignettes/markovchainCrashIntro.pdf
+
+
+Suppose a car rental agency has three locations in Ottawa: Downtown location (labeled A), East end location (labeled B) and a West end location (labeled C). The agency has a group of delivery drivers to serve all three locations. The agency's statistician has determined the following:
+
+* 1.      Of the calls to the Downtown location, 30% are delivered in Downtown area, 30% are delivered in the East end, and 40% are delivered in the West end
+
+* 2.      Of the calls to the East end location, 40% are delivered in Downtown area, 40% are delivered in the East end, and 20% are delivered in the West end
+
+* 3.      Of the calls to the West end location, 50% are delivered in Downtown area, 30% are delivered in the East end, and 20% are delivered in the West end.
+
+
+
+After making a delivery, a driver goes to the nearest location to make the next delivery. This way, the location of a specific driver is determined only by his or her previous location.
+ 
+We model this problem with the following matrix:
+
+
+```{r, cache=TRUE}
+
+library(markovchain)
+
+
+
+
+#markovchainFit Function to return fitted Markov chain for a given sequence.
+#predict Method to calculate predictions from markovchain or markovchainList objects.
+#rmarkovchain Function to sample from markovchain or markovchainList objects.
+
+
+## Steps: 
+#1.Create matrix from sequence (frecuency and probability)
+#2.Fit model 
+#3.Predict new action from a current state
+
+`````
+
+
+```{r, sintetic_data, cache=TRUE}
+
+##### EXAMPLE syntetic data
+
+rentalStates <- c("Downtown", "East", "West")
+rentalTransition <- matrix(c(0.3, 0.3, 0.4, 
+                      0.4, 0.4, 0.2, 
+                      0.5, 0.3, 0.2),
+                      byrow = T, nrow = 3, dimnames = list(rentalStates, rentalStates))
+
+rentalTransition
+
+# 
+# > rentalTransition
+#          Downtown East West
+# Downtown      0.3  0.3  0.4
+# East          0.4  0.4  0.2
+# West          0.5  0.3  0.2
+
+
+mcRental <- new("markovchain", states = rentalStates, byrow = T, 
+                transitionMatrix = rentalTransition, name = "Rental Cars")
+
+
+
+# > mcRental
+# Rental Cars 
+#  A  3 - dimensional discrete Markov Chain with following states 
+#  Downtown East West 
+#  The transition matrix   (by rows)  is defined as follows 
+#          Downtown East West
+# Downtown      0.3  0.3  0.4
+# East          0.4  0.4  0.2
+# West          0.5  0.3  0.2
+
+
+
+# We can access the transition matrix just by calling the mc object
+mcRental[1]  # the probabilities that we go Downtown, East, and West, given that we are currently Downtown
+
+plot(mcRental)  # we can plot it
+
+transitionProbability(mcRental, "Downtown", "West")   # the prob that a driver will go from downtown to West
+
+# Here is a question to set up some of the functions 
+# Given we are downtown, what is the probability we will be downtown in two trips?
+# We can go Downtown -> Downtown, 
+a <- 0.3 * 0.3
+
+# East -> Downtown (note that to we have to get the probability of going Downtown from the East location),
+b <- 0.3 * 0.4
+
+# West -> Downtown (same logic here)
+c <- 0.4 * 0.5
+
+a + b + c    # The probability that we will be downtown in 2 trips.
+
+# That isn't something you want to be doing, especially if you want the probabilities after 20 trips.
+# In turns out though, we can get the same results by squaring the matrix.
+mcRental ^ 2
+
+# We can do this for any number of trips, where the number of trips is the exponent.
+mcRental ^ 20   # notice how where you are starts to become irrelevant, as the number of trips increases.
+
+# It's also important to note that the transition matrix T ^ n, will converge as n increases, 
+# given that there are no 0's or 1's in our initial matrix.
+
+
+# So if we had 70 drivers, how many drivers would be at the West location after 30 trips?
+# This distribution, the converged probabilities of each state, where the location at which you start
+# is irrelevant (because n is sufficiently large), is called the stationary distribution.
+# We can access it using the steadyStates() method.
+mcRental ^ 30
+70*steadyStates(mcRental)      
+
+
+
+# Now let's look at some of the other methods that the markovchain package has
+summary(mcRental)
+conditionalDistribution(mcRental, "Downtown")
+
+
+
+mcRental[2,3]
+
+# > mcRental
+# Rental Cars 
+#  A  3 - dimensional discrete Markov Chain with following states 
+#  Downtown East West 
+#  The transition matrix   (by rows)  is defined as follows 
+#          Downtown East West
+# Downtown      0.3  0.3  0.4
+# East          0.4  0.4  0.2
+# West          0.5  0.3  0.2
+
+
+
+#It is possible to simulate states distribution after n-steps
+
+initialState<-c(0,1,0)
+steps<-4
+finalState<-initialState*mcRental^steps #using power operator
+finalState
+
+
+#As well as steady states distribution
+steadyStates(mcRental) #S4 method
+
+
+````
+
+
+
+```{r, fromSequencyData, cache=TRUE}
+
+## SEQUENCIES
+
+
+library(markovchain) 
+sequence <- c("nomina","recibos","hipoteca", "ppi", "recibos", "hipoteca", "prestamo", "wallet", "wallet") 
+
+#sequence1 <- c( "a", "a", "b", "a", "b", "a", 
+#              "b", "a", "a", "b", "b", "b", "a,b", "a,b", "a", "a,b", "b")
+
+mcFit <- markovchainFit(data=sequence)
+mcFit
+
+mcFit$estimate
+
+#### converts a sequence matrix into a probability matrix
+createSequenceMatrix(sequence)
+
+createSequenceMatrix(sequence, toRowProbs = TRUE, sanitize = TRUE)
+
+## a.ahead (numero de acciones posteriores al estado indicado en newdata)
+predict(mcFit$estimate, newdata="recibos",n.ahead=1)
+
+
+
+
+seq <- createSequenceMatrix(sequence)
+seq <- prop.table(seq,1)
+seq[complete.cases(seq), ]
+seq[is.na(seq)] <- 0
+seq
+
+#mc <- new("markovchain", states= colnames(seq), byrow=T,  
+#                transitionMatrix = as.matrix(seq),
+#          name = "Sequence example"
+#          )
+
+
+prop.table(seq,1)
+mc <- new("markovchain", states = colnames(seq), byrow = T, 
+                transitionMatrix = seq, name = "Productos")
+
+plot(mc)
+`````
+
+```{r, realdata_easy, cache=TRUE, EVAL=FALSE}
+
+
+## REAL DATA (i)
+
+#columns
+Actions <- c("Hipoteca", "Prestamo", "Nomina", "Recibo")
+
+## Define K lenght states (rows)
+States <- c("Nomina-Recibo", "Alta-txc", "txc-recibo", "txc-nomina")
+
+
+
+Transition <- matrix(c(1,0,0,0, 
+                      0,0,0,1, 
+                      2,0,0,0,
+                      0,1,0,0),
+                      byrow = T, nrow = 4, dimnames = list(States, Actions))
+
+Transition
+
+
+
+# mc <- new("markovchain", states = States, byrow = T, 
+#                 transitionMatrix = Transition, name = "BBVA Engagement")
+# 
+# 
+# 
+# # We can access the transition matrix just by calling the mc object
+# mc[1]  # the probabilities that we go Downtown, East, and West, given that we are currently Downtown
+# 
+# plot(mc)  # we can plot it
+# 
+# transitionProbability(mc, "Nomina-Recibo", "Prestamo")   # the prob that a driver will go from downtown to West
+
+
+
+`````
+
+```{r, realdata_realinput_sequence_tests, cache=TRUE}
+
+## REAL DATA (ii)
+
+
+#### 1. INPUT:
+# 
+# CCLIENT    DATE     PRODUCTO(state)
+# 3         1983      nomina
+# 3         1984      recibos
+# :
+# :
+# 58997     1983      recibos
+# 58997     1984      hipoteca
+# :
+  
+
+##### 2. COMPUTE FRECUENCY TRANSITION MATRIX FROM SEQUENCE
+
+set.seed(1001)
+
+# Raw data in long format --
+raw <- data.frame(name=c("f1","f1","f1","f1","f2","f2","f2","f2"),
+                  year=c(83,   84,  85,  86,  83,  84,  85,  86),
+                  state=c("nomina","recibos","hipoteca", "hipoteca", "recibos", "hipoteca", "prestamo", "wallet")  )
+
+transition.probabilities <- function(D, timevar="year",
+                                     idvar="name", statevar="state") {
+  merged <- merge(D, cbind(nextt=D[,timevar] + 1, D),
+  by.x = c(timevar, idvar), by.y = c("nextt", idvar))
+  t(table(merged[, grep(statevar, names(merged), value = TRUE)]))
+}
+
+p <- transition.probabilities(raw, timevar="year", idvar="name", statevar="state")
+
+# > p
+#           state.x
+# state.y    hipoteca nomina prestamo recibos wallet
+#   hipoteca        1      0        1       0      0
+#   nomina          0      0        0       1      0
+#   prestamo        0      0        0       0      1
+#   recibos         2      0        0       0      0
+#   wallet          0      0        0       0      0
+
+
+
+probabilities_p <- p
+
+probabilities_p[] <- as.vector(p) / rep( as.vector(apply( p, 2, sum )), each=dim(p)[1] )
+
+
+
+
+###########  FRECUENCY MATRIX TO PROBABILITY 
+
+
+
+# Sample data
+states <- sample(LETTERS[1:3], 1e5, replace=TRUE)
+
+# Pairs of transitions
+d <- embed( states, 3 )
+colnames(d) <- c("today", "yesterday", "day before yesterday")
+head(d)
+
+# Count the transitions
+counts <- table( as.data.frame( d ) )
+
+# Divide by the total number of transitions, to have probabilities
+probabilities <- counts
+probabilities[] <- as.vector(counts) / rep( as.vector(apply( counts, 2:3, sum )), each=dim(counts)[1] )
+
+# Check that the probabilities sum up to 1
+apply( probabilities, 2:3, sum )
+
+# Convert the 3-dimensional array to a data.frame
+library(reshape2)
+dcast( melt( probabilities ), yesterday + `day before yesterday` ~ today )
+
+
+
+##########
+
+
+
+
+
+```

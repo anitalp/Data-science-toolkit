@@ -1,0 +1,892 @@
+---
+output:
+  html_document:
+    self_contained: no
+    theme: cerulean
+---
+
+---
+title: ""
+author: "BBVA D&A - Ana"
+output: html_document
+---
+
+
+Logistic Regression (Classification)
+==========================
+
+
+###Importante:
+
+* Variables cualitativas (discretos y nominales): Regressión logística
+* Variables continuas : Regressión lineal
+
+* Variable dependiente: variable que quiero estimar, predicha
+* Variable independiente: predictores, variables que usamos para calcular la dependiente
+
+####Regresión logística
+
+En estadística, la regresión logística es un tipo de análisis de regresión utilizado para predecir el resultado de una variable categórica (una variable que puede adoptar un número limitado de categorías) en función de las variables independientes o predictoras. Es útil para modelar la probabilidad de un evento ocurriendo como función de otros factores. El análisis de regresión logística se enmarca en el conjunto de **Modelos Lineales Generalizados** (GLM por sus siglas en inglés) que usa como función de enlace la función logit. Las probabilidades que describen el posible resultado de un único ensayo se modelan, como una función de variables explicativas, utilizando una función logística.
+
+La regresión logística es usada extensamente en las ciencias médicas y sociales. Otros nombres para regresión logística usados en varias áreas de aplicación incluyen modelo logístico, modelo logit, y clasificador de máxima entropía.
+
+####Generalized Linear Models (GLMs)
+
+En estadística, el modelo lineal generalizado (MLG) es una generalización flexible de la regresión lineal ordinaria. Relaciona la distribución aleatoria de la variable dependiente en el experimento (la «función de distribución») con la parte sistemática (no aleatoria) (o «predictor lineal») a través de una función llamada la «función de enlace».
+
+Los modelos lineales generalizados fueron formulados por John Nelder y Robert Wedderburn como una manera de unificar varios modelos estadísticos, incluyendo la regresión lineal, regresión logística y regresión de Poisson, bajo un solo marco teórico.1 Esto les permitió desarrollar un algoritmo general para la estimación de **máxima verosimilitud** en todos estos modelos. Esto puede extenderse de manera natural a otros muchos modelos.
+
+
+ First, let’s clear up some potential misunderstandings about terminology.  The term **general linear model (GLM)** usually refers to conventional linear regression models for a continuous response variable given continuous and/or categorical predictors. It includes multiple linear regression, as well as ANOVA and ANCOVA (with fixed effects only). The form is yi∼N(xTiβ,σ2),yi∼N(xiTβ,σ2), where xixi contains known covariates and ββ contains the coefficients to be estimated. These models are fit by least squares and weighted least squares using, for example: SAS Proc GLM or R functions lsfit() (older, uses matrices) and lm() (newer, uses data frames).
+
+The term **generalized linear model** (GLIM or GLM) refers to a larger class of models popularized by McCullagh and Nelder (1982, 2nd edition 1989). In these models, the response variable yiyi is assumed to follow an exponential family distribution with mean μiμi, which is assumed to be some (often nonlinear) function of xTiβxiTβ. Some would call these “nonlinear” because  μiμi is often a nonlinear function of the covariates, but McCullagh and Nelder consider them to be linear, because the covariates affect the distribution of yiyi only through the linear combination xTiβxiTβ.  
+
+The generalized linear models (GLMs) are a broad class of models that include linear regression, ANOVA, Poisson regression, log-linear models etc. The table below provides a good summary of GLMs following Agresti (ch. 4, 2013):
+
+Model               Random	    Link	Systematic:
+* Linear Regression	  Normal	Identity	Continuous
+* ANOVA	              Normal	Identity	Categorical
+* ANCOVA	            Normal	Identity	Mixed
+* Logistic Regression	Binomial	Logit	Mixed
+* Loglinear	          Poisson	Log	Categorical
+* Poisson Regression	Poisson	Log	Mixed
+* Multinomial response	Multinomial	Generalized Logit	Mixed
+
+Further information: https://onlinecourses.science.psu.edu/stat504/node/216
+
+
+####DIFERENCIAS REGRESIÓN LINEAL vs LOGISTICA
+
+Ver gráfico lineal y curva: 
+http://juangabrielgomila.com/en/logistic-regression-derivation/
+
+  
+<div id="bg"
+  <img src="/Users/alaguna/Desktop/Ana/Scripts_machinelearning_statistics/LinearLogisticRegression.png" alt=""
+</div> 
+
+Whenever the log of odd ratio is found to be positive, the probability of success is always more than 50%. A typical logistic model plot is shown below. You can see probability never goes below 0 and above 1.
+
+#####FÓRMULAS:
+
+
+â = valor a predecir, variable dependiente
+βo = intercept
+β1 = slope (pendiente)
+Xn =  variables observadas
+
+
+**Regresión lineal**:
+
+      â = βo + β1x1 + β2x2  ... βnxn 
+
+**Regresión logística**:
+
+We use the logistic regression equation to predict the probability of a dependent variable taking the dichotomy values 0 or 1. Suppose x1, x2, ..., xp are the independent variables, α and βk (k = 1, 2, ..., p) are the parameters, and E(y) is the expected value of the dependent variable a, then the logistic regression equation is:
+
+      P(a) = 1 / 1 + e -(βo + β1x1 + β2x2  ... βnxn )
+
+Polinomio transformado a una función exponencial (probabilidad) entre 0 y 1 (porque queremos que sea binario)
+
+      P(a) = p(x1,x2...; β)  / 1 - p(x1,x2...; β) =  e (βo + β1x1 + β2x2  ... βnxn)
+
+
+
+**odss** (ratios de riesgo) = p(x1,x2...; β)  / 1 - p(x1,x2...; β)  = e (βo + β1x1 + β2x2  ... βnxn)
+(exponencial de β)
+
+
+Let's begin with probability. Probabilities range between 0 and 1. Let's say that the probability of success is .8, thus
+p = .8
+Then the probability of failure is q = 1 - p = .2
+Odds are determined from probabilities and range between 0 and infinity. Odds are defined as the ratio of the probability of success and the probability of failure. The odds of success are
+odds(success) = p/(1-p) or p/q = .8/.2 = 4,
+that is, the odds of success are 4 to 1. The odds of failure would be
+odds(failure) = q/p = .2/.8 = .25.
+This looks a little strange but it is really saying that the odds of failure are 1 to 4.  The odds of success and the odds of failure are just reciprocals of one another, i.e., 1/4 = .25 and 1/.25 = 4.  Next, we will add another variable to the equation so that we can compute an odds ratio.
+
+Another example
+
+This example is adapted from Pedhazur (1997).  Suppose that seven out of 10 males are admitted to an engineering school while three of 10 females are admitted. The probabilities for admitting a male are,
+p = 7/10 = .7       q = 1 - .7 = .3
+If you are male, the probability of being admitted is 0.7 and the probability of not being admitted is 0.3.
+
+Here are the same probabilities for females,
+p = 3/10 = .3       q = 1 - .3 = .7
+If you are female it is just the opposite, the probability of being admitted is 0.3 and the probability of not being admitted is 0.7.
+
+Now we can use the probabilities to compute the odds of admission for both males and females,
+odds(male) = .7/.3 = 2.33333
+odds(female) = .3/.7 = .42857
+Next, we compute the odds ratio for admission,
+OR = 2.3333/.42857 = 5.44
+Thus, for a male, the odds of being admitted are 5.44 times larger than the odds for a female being admitted.
+
+http://www.ats.ucla.edu/stat/stata/faq/oratio.htm
+
+
+````{r, echo=TRUE, eval=FALSE}
+ 
+#Logit function
+log(p/(1-p)) #is the link function
+
+
+#Logistic regression equation:
+  
+log(p/(1-p)) = y
+log(p/(1-p)) = βo + β(variable1) + β(variable2)
+
+#Odd ratio
+(p/1-p) #is the odd ratio
+
+
+````
+
+
+
+
+####DIFERENCIAS REGRESIÓN LOGISTICA y ENTROPÍA MÁXIMA
+
+What is the relationship between Log Linear model, MaxEnt model and Logistic Regression?
+
+The short answer is: 
+* There is no real differences between a MaxEnt model and a logistic regression. They are both **log linear models**.
+
+(Log-linear analysis is a technique used in statistics to examine the relationship between more than two categorical variables. The technique is used for both hypothesis testing and model building. In both these uses, models are tested to find the most parsimonious (i.e., least complex) model that best accounts for the variance in the observed frequencies. (A Pearson's chi-square test could be used instead of log-linear analysis, but that technique only allows for two of the variables to be compared at a time.[1]))
+
+
+And now, the long answer:
+* The  logistic regression is a probabilistic model for **binomial** cases. The  MaxEnt generalizes the same principle for **multinomial** cases.
+
+More information with formulas: https://www.quora.com/What-is-the-relationship-between-Log-Linear-model-MaxEnt-model-and-Logistic-Regression
+
+
+
+
+
+####EVALUATION
+
+**PASOS PARA EVALUAR EL MODELO DE REGRESIÓN LOGÍSTICA**
+
+* 1. Chi-cuadrado en la preuba Omnibus (if distinto de 0)
+     if < 0.05, variables independientes y por tanto, podemos continuar.
+     
+* 2. Pseudo R^2: Unlike linear regression with ordinary least squares estimation, there is no R2 statistic which explains the proportion of variance in the dependent variable that is explained by the predictors. However, there are a number of pseudo R2 metrics that could be of value. Most notable is McFadden’s R2, which is defined as 1−[ln(LM)/ln(L0)] where ln(LM) is the log likelihood value for the fitted model and ln(L0) is the log likelihood for the null model with only an intercept as a predictor. The measure ranges from 0 to just under 1, with values closer to zero indicating that the model has no predictive power: 
+     ** R cuadrado Cox y Snell   
+     ** R cuadrado Nagelkerke: corrige el anterior (siempre algo mejor). 
+     (con variables dicotómicas, multinomales)
+     Se diferencia de R cuadrado normal en que las variables que este último son continuas (regresión lineal) 
+     Cuanto más alto sea este R cuadrado Cox y Snell o Nagelkerke más explicativo es el modelo. Sin embargo, un 0,20 se considera alto, no esperemos un 0,75.
+     
+* 3. Tabla de clasificación (Falsos positivos, falsos negativos, etc.) : casos que el modelo es capaz de predecir correctamente. if = 50% se acepta.  
+* 4. Signifiación de B (pvalue de la variable)  0.05 (significativo)
+* 5. Signo de B (dirección de la relación) : 0 o 1, blanco o negro
+* 6. Exponencial de B, indica la potencia/fortaleza de la relación entre la variable dependiente y la independiente. Cuánto más lejos de 1, más fuerte.   
+* 7. Tabla de contigencia prueba Hosmer y Lemeshow. If significación = 1, excellente (lo contrario de siempre), cuanto más grande mejor.
+**Hosmer-Lemeshow Test**:
+Another approch to determining the goodness of fit is through the Homer-Lemeshow statistics, which is computed on data after the observations have been segmented into groups based on having similar predicted probabilities. It examines whether the observed proportions of events are similar to the predicted probabilities of occurence in subgroups of the data set using a pearson chi square test. Small values with large p-values indicate a good fit to the data while large values with p-values below 0.05 indicate a poor fit. The null hypothesis holds that the model fits the data and in the below example we would reject H0.
+
+* 8. -2 log de versimilitud (similitud entre las variables). Como es negativo, cuanto más pequeño mejor.
+     
+   
+
+##### MÉTRICAS EVALUACIÓN
+
+**Regresión lineal**:
+
+* R cuadrado: cuanto más grande más correlación. Dependiendo del dominio :
+    - Social: 50% niños pobres en Madrid, gays, mucho (con 30% es grande)
+    - Médico:  99% (no queremos que se muera nadie)
+    - Económico  60/70% (la economía reconvertida el 60% es muuuy bueno)
+    
+* Gráfico scatter plot + linea con diferencias entre el valor real y el predicho.    
+* t-statistics : t-student distribución normal cuando N es pequeña (linear)
+* f-statistics: Fitcher (con chi cuadrado) (linear)
+
+**Regresión logística**:
+
+* **Curva ROC** :  Receiver Operating Characteristic(ROC) summarizes the model’s performance by evaluating the trade offs between true positive rate (sensitivity) and false positive rate(1- specificity). For plotting ROC, it is advisable to assume p > 0.5 since we are more concerned about success rate. ROC summarizes the predictive power for all possible values of p > 0.5.  The area under curve (AUC), referred to as index of accuracy(A) or concordance index, is a perfect performance metric for ROC curve. Higher the area under curve, better the prediction power of the model. Below is a sample ROC curve. The ROC of a perfect predictive model has TP equals 1 and FP equals 0. This curve will touch the top left corner of the graph.
+
+Note: For model performance, you can also consider likelihood function. It is called so, because it selects the coefficient values which maximizes the likelihood of explaining the observed data. It indicates goodness of fit as its value approaches one, and a poor fit of the data as its value approaches zero.
+
+* **Null Deviance and Residual Deviance** – Null Deviance indicates the response predicted by a model with nothing but an intercept. Lower the value, better the model. Residual deviance indicates the response predicted by a model on adding independent variables. Lower the value, better the model.
+
+* **AIC (Akaike Information Criteria)** – The analogous of **adjusted R²** in logistic regression is AIC. AIC is the measure of fit which penalizes model for the number of model coefficients. Therefore, we always prefer model with **minimum AIC** value.
+
+* **Confusion Matrix** (falsos positivos, verdaderos positivos...)
+  It is nothing but a tabular representation of Actual vs Predicted values. This helps us to find the accuracy of the model and avoid overfitting. 
+* **Accuracy** of your model with:
+      (TRUE POSITIVE + TRUE NEGATIVES)  / (TRUE POSITIVE + TRUE NEGATIVES + FALSE POSITIVES + FALSE NEGATIVES)  = (TP + TN) / (TP + TN + FP + FN)
+* F1 SCORE: the harmonic mean of precision and sensitivity
+      F1 = 2TP (1TP + FP + FN)
+* Specificity ( true negative rate): measures the proportion of negatives that are correctly identified
+      TRUE NEGATIVE / NEGATIVE = TN (TN + FN)
+* Sensitivity (recall, true positive rate): measures the proportion of positives that are correctly identified  
+      TRUE POSITIVE/ POSITIVE = TP / (TP + FN)
+* Precision: positive predictive value
+      TP / (TP + FP)
+* Negative predictive value   
+      TN / (TN + FN)
+* -2LL
+* z-statistics : distribución normal cuando N es grande 
+* R cuadrado Cox Snell y Nagelherke
+
+
+Ambos: ANOVA con los errores, si el p-value = 0, hay correlación
+(RSE, RSS, TSS)
+
+
+##### VALIDATION of the model
+
+* Cross validation
+* Validación muestral
+
+
+##### EJECUCIÓN en R: ¿Le paso todas las variables al modelo o voy añadiendo poco a poco?
+
+* En regresión lineal, las variables se calculan acumulativamente en el modelo. Probar por separado: dependiente e independiente. Se van añadiendo variables poco a poco en el modelo. No se dan todas de golpe.
+
+
+PASOS REGRESIÓN LINEAL:
+
+1. Probarlas por separado (1er paso: dependiente y 1 independiente, y así sucesivamente probando variable independiente por variable independiente, una a una)
+
+2. Ranking de todas por R cuadrado, cuanto máyor, más correlación entre la variable dependiente y la indpendiente.
+
+3. Voy añadiendo las primeras del ranking . Si añado las 3 primeras y tengo el mismo R cuadrado que con 1 variable, algo ocurre entre las independientes: **problemas de multicolinearidad** (pintar tablas de contigencia y correlation matrix entre variables independientes, estudiar qué ocurre).
+
+
+* En regresión logística, las variables se calculan una a una, por tanto puedo darle en el primer paso todas las variables porque las va a calcular una a una sin repercusión en las otras.
+     
+     
+     
+     
+#####Bibliografía     
+
+http://data.princeton.edu/R/glms.html
+http://psych.colorado.edu/wiki/lib/exe/fetch.php?media=labs:learnr:rohan_-_logistical_regression_in_r:an_introduction_to_logistic_regression_in_r.pdf
+
+https://www.st-andrews.ac.uk/media/capod/students/mathssupport/logisticknit.pdf
+http://www.paul4llen.com/documents/2013/12/ustat-logistic-regression-with-r-example-one.pdf
+
+Evaluating Logistic regression models: http://www.r-bloggers.com/evaluating-logistic-regression-models/
+http://rcompanion.org/rcompanion/e_06.html
+
+
+
+Advantages of different classification algortihms:
+https://www.quora.com/What-are-the-advantages-of-different-classification-algorithms
+
+
+
+`````{r,cache=TRUE}
+############ FUNCIONES 
+
+
+### McFadden, Cox and Snell, and Nagelkerke pseudo-R-squared       
+### Example: http://rcompanion.org/rcompanion/e_03.html 
+
+nagelkerke = 
+function(fit, null=NULL)
+{
+   TOGGLE = (class(fit)[1]=="lm"
+             | class(fit)[1]=="gls"
+             | class(fit)[1]=="lme"
+             | class(fit)[1]=="glm"
+             | class(fit)[1]=="clm")
+   BOGGLE = (class(fit)[1]=="nls"
+             | class(fit)[1]=="lmerMod"
+             | class(fit)[1]=="merModLmerTest"
+             | class(fit)[1]=="clmm")
+   SMOGGLE = (class(fit)[1]=="lmerMod"
+              | class(fit)[1]=="merModLmerTest")
+   NOGGLE = is.null(null)
+   ERROR = "Note: For models fit with REML, these statistics are based on refitting with ML"
+   
+  if(NOGGLE & TOGGLE){null = update(fit, ~ 1)}
+  if(NOGGLE & BOGGLE)
+     {ERROR = "You need to supply a null model for nls, lmer, or clmm"}
+  if((!TOGGLE) & (!BOGGLE))
+   {ERROR = "This function will work with lm, gls, lme, lmer, glm, nls, clm, and clmm"}
+  
+  Y = matrix(rep(NA,2),
+            ncol=1)
+  colnames(Y) = ""
+  rownames(Y) = c("Model:", "Null:")
+  
+  Z = matrix(rep(NA, 3),
+             ncol=1)
+  colnames(Z) = c("Pseudo.R.squared")
+  rownames(Z) = c("McFadden", "Cox and Snell (ML)", 
+                  "Nagelkerke (Cragg and Uhler)") 
+  X = matrix(rep(NA,4),
+             ncol=4)
+  colnames(X) = c("Df.diff","LogLik.diff","Chisq","p.value")
+  rownames(X) = ""
+  
+  if(TOGGLE | BOGGLE){
+  if (!SMOGGLE){Y[1]= toString(fit$call)}
+  if (SMOGGLE){Y[1]= toString(fit@call)}
+  }
+ 
+  if(TOGGLE | (BOGGLE & !NOGGLE)){
+ 
+  if (!SMOGGLE){Y[2]= toString(null$call)}
+  if (SMOGGLE){Y[2]= toString(null@call)}
+ 
+  N = nobs(fit)
+  m = suppressWarnings(logLik(fit, REML=FALSE))[1]
+  n = suppressWarnings(logLik(null, REML=FALSE))[1]
+  mf = 1 - m/n
+  Z[1,] = signif(mf, digits=6)
+  cs = 1 - exp(-2/N * (m - n))
+  Z[2,] = signif(cs, digits=6)
+  nk = cs/(1 - exp(2/N * n))
+  Z[3,] = signif(nk, digits=6)
+  
+  
+  o = n - m
+  dfm = attr(logLik(fit),"df")
+  dfn = attr(logLik(null),"df")
+  dff = dfn - dfm
+  CHI = 2 * (m - n)
+  P = pchisq(CHI, abs(dff), lower.tail = FALSE)
+  
+  X [1,1] = dff
+  X [1,2] = signif(o, digits=5)             
+  X [1,3] = signif(CHI, digits=5)
+  X [1,4] = signif(P, digits=5)     
+  }
+  
+  W=ERROR
+  
+  V = list(Y, Z, X, W) 
+  names(V) = c("Models", "Pseudo.R.squared.for.model.vs.null", "Likelihood.ratio.test",
+               "Messages")
+  return(V)            
+  }
+`````
+
+######BBVA DATA
+
+````{r, cache=TRUE}
+
+####### BBVA DATA
+
+data <- read.csv("/Users/alaguna/Desktop/Ana/Scripts_machinelearning_statistics/DATO_juguete/dataset_navegacionweb_prestamo_10K.csv", header=TRUE)
+attach(data)
+
+
+######## FITTING THE MODEL
+
+
+lrfit <- glm( ind_lead_put ~   num_visit + des_last_touch_channel + num_pages + ind_home + ind_contenido_put + ind_calculadora_put + ind_simulador_put + ind_ini_form_put + cod_finalidad + num_importe + num_ingresos + num_gastos , family = gaussian)
+
+#write.csv(summary(lrfit), "/Users/alaguna/Desktop/Ana/Scripts_machinelearning_statistics/"
+#1-pchisq(96.95,8804)
+#head(summary(lrfit),200)
+
+
+#lrfit2 <- glm(ind_lead_put ~   ind_cliente + des_last_touch_channel + ind_contenido_put + ind_simulador_put + cod_finalidad   , family = gaussian)
+#summary(lrfit2)
+#lrfit2
+#1-pchisq(328.8,9957)
+
+
+#SEO <- data$des_last_touch_channel == "SEO"
+#SEM <- data$des_last_touch_channel == "SEM"
+#Display <- data$des_last_touch_channel == "Display"
+
+
+#lrfit3 <-  glm(ind_lead_put ~   ind_cliente + SEO + SEM + Display + ind_contenido_put + ind_simulador_put + cod_finalidad   , family = gaussian)
+#summary(lrfit3)
+
+
+lrfit4 <-  glm(ind_lead_put ~   ind_cliente + des_last_touch_channel+ num_pages + ind_home + ind_contenido_put + ind_simulador_put + cod_finalidad   + num_importe + num_ingresos + num_gastos, family = gaussian)
+
+head(summary(lrfit4))
+
+1-pchisq(53.14,8806)
+#1  (if it is 0, we need a better a model, so our model is good)
+plot(lrfit4)
+
+# Try plot(lrfit). You get the same plots as in a linear model, but adapted to a generalized linear model; for example the residuals plotted are deviance residuals (the square root of the contribution of an observation to the deviance, with the same sign as the raw residual).
+# 
+# The functions that can be used to extract results from the fit include
+# 
+# residuals or resid, for the deviance residuals
+# fitted or fitted.values, for the fitted values (estimated probabilities)
+# predict, for the linear predictor (estimated logits)
+# coef or coefficients, for the coefficients, and
+# deviance, for the deviance.
+
+
+lrfit5 <-  glm(ind_lead_put ~   num_ingresos + num_gastos, family = gaussian)
+1-pchisq( 258.3,9062)
+#1
+head(summary(lrfit5))
+
+
+
+```
+
+
+
+
+
+``````{r, cache=TRUE}
+
+#load data
+train <- data
+
+#create training and validation data from given data
+library(caTools)
+
+set.seed(88)
+split <- sample.split(train$ind_lead_put, SplitRatio = 0.75)
+
+#get training and test data
+dresstrain <- subset(train, split == TRUE)
+dresstest <- subset(train, split == FALSE)
+
+#logistic regression model
+model <- glm(ind_lead_put ~   ind_cliente + des_last_touch_channel+ num_pages + ind_home + ind_contenido_put + ind_simulador_put + cod_finalidad, data= dresstrain, family = binomial)
+#model <- glm(ind_lead_put ~   ind_cliente + des_last_touch_channel+ num_pages + ind_home + ind_contenido_put + ind_simulador_put + cod_finalidad   + num_importe + num_ingresos + num_gastos, data= dresstrain, family = binomial)
+#model <- glm( cbind(using,notUsing) ~ age + hiEduc + noMore, family=binomial)
+
+
+#model <- glm (ind_lead_put ~ .-global_id, data = dresstrain, family = binomial)
+summary(model)
+predict <- predict(model, type = 'response')
+
+
+
+library(ggplot2)
+ggplot(dresstrain, aes(x=des_last_touch_channel, y=ind_lead_put)) + geom_point() + 
+stat_smooth(method="glm", family="binomial", se=FALSE)
+
+`````
+
+
+
+``````{r,cache=TRUE, eval=TRUE, echo=TRUE}
+
+
+
+############ MODEL EVALUATION ##############
+
+
+#Chi-cuadrado en la preuba Omnibus (if distinto de 0)
+#     if < 0.05, variables independientes y por tanto, podemos continuar.
+model    
+1-pchisq( 92.5,6506)
+#1 ????
+
+#Pseudo R^2 
+#R cuadrado Cox y Snell  
+#R cuadrado Nagelkerke: corrige el anterior (siempre algo mejor). 
+#     (con variables dicotómicas, multinomales)
+#     Se diferencia de R cuadrado normal en que las variables que este último son continuas   (regresión lineal) 
+#     Cuanto más alto sea este R cuadrado Cox y Snell o Nagelkerke más explicativo es el modelo. Sin embargo, un 0,20 se considera alto, no esperemos un 0,75.
+#Most notable is McFadden’s R2, which is defined as 1−[ln(LM)/ln(L0)] where ln(LM) is the log likelihood value for the fitted model and ln(L0) is the log likelihood for the null model with only an intercept as a predictor. The measure ranges from 0 to just under 1, with values closer to zero indicating that the model has no predictive power.
+nagelkerke(model)
+
+library(pscl)
+#pR2(model)  # look for 'McFadden'
+
+
+#Confusion matrix (falsos positivos, negativos)
+table(dresstrain$ind_lead_put, predict > 0.5)
+
+
+
+#Null Deviance indicates the response predicted by a model with nothing but an intercept. Lower the value, better the model. 
+
+#Residual deviance indicates the response predicted by a model on adding independent variables. Lower the value, better the model.
+
+#AIC (Akaike Information Criteria) - The analogous of **adjusted R²** in logistic regression is AIC. AIC is the measure of fit which penalizes model for the number of model coefficients. Therefore, we always prefer model with **minimum AIC** value.
+
+summary(model)
+
+
+
+#ROCR Curve: mejor cuanto más cercana a los extremos de izquierda y arriba
+library(ROCR)
+ROCRpred <- prediction(predict, dresstrain$ind_lead_put)
+ROCRperf <- performance(ROCRpred, 'tpr','fpr')
+plot(ROCRperf, colorize = TRUE, text.adj = c(-0.2,1.7))
+#plot(model)
+
+
+
+#ACCURACY
+# pred = predict(model, type="response")
+# accuracy <- table(pred, dresstest[,"ind_lead_put"])
+# sum(diag(accuracy))/sum(accuracy)
+# ## [1] 0.705
+# pred = predict(model, newdata=dresstest)
+# confusionMatrix(data=pred, dresstest$ind_lead_put)
+
+library(caret)
+pred = predict(model)
+accuracy <- table(pred, dresstrain[,"ind_lead_put"])
+sum(diag(accuracy))/sum(accuracy)
+## [1] 0.705
+#pred = predict(model)
+#confusionMatrix(data=pred, dresstest$ind_lead_put)
+
+
+
+
+#Coefficients and exponentiated cofficients
+#summary(model)
+#confint(model)
+exp(model$coefficients)         # exponentiated coefficients
+#exp(confint(model))  
+
+
+#Signo de B (dirección de la relación) : 0 o 1, blanco o negro
+anova(model)
+
+
+#Analysis of variance for individual features (MORE IMPORTANTE FEAUTURES)
+#pvalue variables
+library(car)
+#Anova(model, type="II", test="Wald")
+ 
+
+
+
+#IMPORTANCIA DE LAS VARIABLES con t-statistic
+#To assess the relative importance of individual predictors in the model, we can also look at the absolute value of the t-statistic for each model parameter. This technique is utilized by the varImp function in the caret package for general and generalized linear models.
+library(caret)
+
+varImp(model)
+
+
+#Overall p-value for the model 
+anova(model, 
+      update(model, ~1),    # update here produces null model for comparison
+      test="Chisq")
+
+
+
+#-2 log de versimilitud (similitud entre las variables). Como es negativo, cuanto más pequeño mejor (less than 0.05 would compel us to reject the null hypothesis)
+library(lmtest)
+lrtest(model)
+ 
+
+
+#Hosmer-Lemeshow Test (large pvalues lo mejor, lo contrario de lo normal)
+
+library(MKmisc)
+HLgof.test(fit = fitted(model), obs = dresstrain$ind_lead_put)
+library(ResourceSelection)
+hoslem.test(dresstrain$ind_lead_put, fitted(model), g=10)
+
+
+
+#Plot of standarized residuals
+plot(fitted(model), 
+     rstandard(model)
+     )
+
+model1 <- glm(ind_lead_put ~   ind_simulador_put, data= dresstrain, family = binomial)
+
+#Plotting the model
+plot( ind_lead_put  ~ ind_simulador_put,
+     data = dresstrain, 
+     xlab="ind_lead_put", 
+     ylab="ind_contenido_put", 
+     pch=19)              
+
+## Tiene que ser binomial el modelo!!!
+curve(predict(model1,data.frame(ind_simulador_put=x),type="resp"),add=TRUE) # draws a curve based on prediction from logistic regression model
+
+library(popbio)
+#logi.hist.plot(ind_simulador_put,ind_lead_put,boxp=FALSE,type="hist",col="gray")
+
+
+
+#* 5. Signo de B (dirección de la relación) : 0 o 1, blanco o negro
+#* 6. Exponencial de B, indica la potencia/fortaleza de la relación entre la variable dependiente y la independiente. Cuánto más lejos de 1, más fuerte.   
+#* 7. Tabla de contigencia prueba Hosmer y Lemeshow. If significación = 1, excellente (lo contrario de siempre), cuanto más grande mejor.
+
+
+
+
+
+````
+
+
+````{r, cache=TRUE}
+##########  MODELS COMPARISON
+
+anova(lrfit5,lrfit4)
+
+#Analysis of Deviance Table
+
+# Model 1: ind_lead_put ~ num_ingresos + num_gastos
+# Model 2: ind_lead_put ~ ind_cliente + des_last_touch_channel + num_pages + 
+#     ind_home + ind_contenido_put + ind_simulador_put + cod_finalidad + 
+#     num_importe + num_ingresos + num_gastos
+#   Resid. Df Resid. Dev  Df Deviance
+# 1      9062    258.345             
+# 2      8806     53.137 256   205.21
+
+#Adding the interactionS (new feautres) has reduced the deviance by 205.21 (error) at the expense of 256 d.f. (degree freedom)
+
+
+####anova(lrfit4,test="Chisq")
+
+# Analysis of Deviance Table
+# 
+# Model: gaussian, link: identity
+# 
+# Response: ind_lead_put
+# 
+# Terms added sequentially (first to last)
+# 
+# 
+#                         Df Deviance Resid. Df Resid. Dev Pr(Chi)    
+# NULL                                     9999    2500.00             
+# ind_cliente              1   379.52      9998    2120.48   <2e-16 ***
+# des_last_touch_channel  10   296.70      9988    1823.78   <2e-16 ***
+# num_pages                1   127.59      9987    1696.19   <2e-16 ***
+# ind_home                 1   340.44      9986    1355.75   <2e-16 ***
+# ind_contenido_put        1  1286.47      9985      69.28   <2e-16 ***
+# ind_simulador_put        1     2.96      9984      66.32   <2e-16 ***
+# cod_finalidad           29    11.28      9955      55.04   <2e-16 ***
+# num_importe            231     0.77      9724      54.28        1    
+# num_ingresos           579     0.11      9145      54.17        1    
+# num_gastos             339     1.03      8806      53.14        1    
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+
+##anova(lrfit5,test="Chisq")
+
+
+````
+
+
+
+`````{r, cache=TRUE, eval=FALSE}
+
+####### CROSS VALIDATION
+
+#K-Fold Cross Validation
+
+#When evaluating models, we often want to assess how well it performs in predicting the target variable on different subsets of the data. One such technique for doing this is k-fold cross-validation, which partitions the data into k equally sized segments (called ‘folds’). One fold is held out for validation while the other k-1 folds are used to train the model and then used to predict the target variable in our testing data. This process is repeated k times, with the performance of each model in predicting the hold-out set being tracked using a performance metric such as accuracy. The most common variation of cross validation is 10-fold cross-validation.
+
+ctrl <- trainControl(method = "repeatedcv", number = 10, savePredictions = TRUE)
+
+
+model <- train(ind_lead_put ~   ind_cliente + des_last_touch_channel+ num_pages + ind_home + ind_contenido_put + ind_simulador_put + cod_finalidad  , data= dresstrain, method="glm", family="binomial",trControl = ctrl, tuneLength = 5)
+
+#pred = predict(model, newdata=dresstest)
+#confusionMatrix(data=pred, dresstest$ind_lead_put)
+
+
+
+
+````
+
+-------------
+
+
+
+#####Sample data
+
+``````{r SAMPLE, eval= TRUE}
+
+
+## SAMPLE 
+#data <- read.table("http://data.princeton.edu/wws509/datasets/cuse.dat",      header=TRUE)
+
+data = read.table("http://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+        sep=",",header=F,col.names=c("age", "type_employer", "fnlwgt", "education", 
+                "education_num","marital", "occupation", "relationship", "race","sex",
+                "capital_gain", "capital_loss", "hr_per_week","country", "income"),
+        fill=FALSE,strip.white=T)
+
+
+attach(data)
+#lrfit <- glm( cbind(using, notUsing) ~   age + education + wantsMore , family = binomial)
+
+
+library(caTools)
+
+set.seed(88)
+split <- sample.split(data$income, SplitRatio = 0.75)
+
+#get training and test data
+dresstrain <- subset(data, split == TRUE)
+dresstest <- subset(data, split == FALSE)
+
+
+model <- glm( income  ~ ., family=binomial, data=dresstrain)
+summary(model)
+
+
+
+
+predict <- predict(model, type = 'response')
+
+
+
+library(ggplot2)
+#ggplot(dresstrain, aes(x=age, y=income)) + geom_point() + 
+#stat_smooth(method="glm", family="binomial", se=FALSE)
+
+````
+
+
+``````{r,cache=TRUE, eval=TRUE, echo=TRUE}
+
+
+
+############ MODEL EVALUATION ##############
+
+
+#Chi-cuadrado en la preuba Omnibus (if distinto de 0)
+#     if < 0.05, variables independientes y por tanto, podemos continuar.
+model    
+1-pchisq( 15570,24420)
+#0/1??
+
+#Pseudo R^2 
+#R cuadrado Cox y Snell  
+#R cuadrado Nagelkerke: corrige el anterior (siempre algo mejor). 
+#     (con variables dicotómicas, multinomales)
+#     Se diferencia de R cuadrado normal en que las variables que este último son continuas   (regresión lineal) 
+#     Cuanto más alto sea este R cuadrado Cox y Snell o Nagelkerke más explicativo es el modelo. Sin embargo, un 0,20 se considera alto, no esperemos un 0,75.
+#Most notable is McFadden’s R2, which is defined as 1−[ln(LM)/ln(L0)] where ln(LM) is the log likelihood value for the fitted model and ln(L0) is the log likelihood for the null model with only an intercept as a predictor. The measure ranges from 0 to just under 1, with values closer to zero indicating that the model has no predictive power.
+nagelkerke(model)
+
+library(pscl)
+#pR2(model)  # look for 'McFadden'
+
+
+#Confusion matrix (falsos positivos, negativos)
+table(dresstrain$income, predict > 0.5)
+
+
+
+#Null Deviance indicates the response predicted by a model with nothing but an intercept. Lower the value, better the model. 
+
+#Residual deviance indicates the response predicted by a model on adding independent variables. Lower the value, better the model.
+
+#AIC (Akaike Information Criteria) - The analogous of **adjusted R²** in logistic regression is AIC. AIC is the measure of fit which penalizes model for the number of model coefficients. Therefore, we always prefer model with **minimum AIC** value.
+
+summary(model)
+
+
+
+#ROCR Curve: mejor cuanto más cercana a los extremos de izquierda y arriba
+library(ROCR)
+ROCRpred <- prediction(predict, dresstrain$income)
+ROCRperf <- performance(ROCRpred, 'tpr','fpr')
+plot(ROCRperf, colorize = TRUE, text.adj = c(-0.2,1.7))
+#plot(model)
+
+
+
+#ACCURACY
+# pred = predict(model, type="response")
+# accuracy <- table(pred, dresstest[,"ind_lead_put"])
+# sum(diag(accuracy))/sum(accuracy)
+# ## [1] 0.705
+# pred = predict(model, newdata=dresstest)
+# confusionMatrix(data=pred, dresstest$ind_lead_put)
+
+library(caret)
+pred = predict(model)
+accuracy <- table(pred, dresstrain[,"income"])
+sum(diag(accuracy))/sum(accuracy)
+## [1] 0.705
+#pred = predict(model)
+#confusionMatrix(data=pred, dresstest$ind_lead_put)
+
+
+
+
+#Coefficients and exponentiated cofficients
+#summary(model)
+#confint(model)
+exp(model$coefficients)         # exponentiated coefficients
+#exp(confint(model))  
+
+
+#Signo de B (dirección de la relación) : 0 o 1, blanco o negro
+anova(model)
+
+
+#Analysis of variance for individual features (MORE IMPORTANTE FEAUTURES)
+#pvalue variables
+library(car)
+#Anova(model, type="II", test="Wald")
+ 
+
+
+
+#IMPORTANCIA DE LAS VARIABLES con t-statistic
+#To assess the relative importance of individual predictors in the model, we can also look at the absolute value of the t-statistic for each model parameter. This technique is utilized by the varImp function in the caret package for general and generalized linear models.
+library(caret)
+
+varImp(model)
+
+
+#Overall p-value for the model 
+anova(model, 
+      update(model, ~1),    # update here produces null model for comparison
+      test="Chisq")
+
+
+
+#-2 log de versimilitud (similitud entre las variables). Como es negativo, cuanto más pequeño mejor (less than 0.05 would compel us to reject the null hypothesis)
+library(lmtest)
+lrtest(model)
+ 
+
+
+#Hosmer-Lemeshow Test (large pvalues lo mejor, lo contrario de lo normal)
+
+library(MKmisc)
+HLgof.test(fit = fitted(model), obs = dresstrain$income)
+library(ResourceSelection)
+hoslem.test(dresstrain$income, fitted(model), g=10)
+
+
+
+#Plot of standarized residuals
+plot(fitted(model), 
+     rstandard(model)
+     )
+
+model1 <- glm(income ~   age, data= dresstrain, family = binomial)
+
+#Plotting the model
+plot( income  ~ age,
+     data = dresstrain, 
+     xlab="ind_lead_put", 
+     ylab="ind_contenido_put", 
+     pch=19)              
+
+## Tiene que ser binomial el modelo!!!
+curve(predict(model1,data.frame(age=x),type="resp"),add=TRUE) # draws a curve based on prediction from logistic regression model
+
+library(popbio)
+#logi.hist.plot(ind_simulador_put,ind_lead_put,boxp=FALSE,type="hist",col="gray")
+
+
+
+#* 5. Signo de B (dirección de la relación) : 0 o 1, blanco o negro
+#* 6. Exponencial de B, indica la potencia/fortaleza de la relación entre la variable dependiente y la independiente. Cuánto más lejos de 1, más fuerte.   
+#* 7. Tabla de contigencia prueba Hosmer y Lemeshow. If significación = 1, excellente (lo contrario de siempre), cuanto más grande mejor.
+
+
+
+
+
+````

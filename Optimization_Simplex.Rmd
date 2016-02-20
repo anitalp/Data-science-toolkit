@@ -1,0 +1,492 @@
+Mathematical Optimization
+==========================
+
+
+En matemáticas, estadísticas, ciencias empíricas, ciencia de la computación, o economía, optimización matemática (o bien, optimización o programación matemática) es la **selección del mejor elemento** (con respecto a algún criterio) de un conjunto de elementos disponibles.
+
+En el caso más simple, un problema de optimización consiste en **maximizar o minimizar una función real** eligiendo sistemáticamente valores de entrada (tomados de un conjunto permitido) y computando el valor de la función. La generalización de la teoría de la optimización y técnicas para otras formulaciones comprende un área grande de las matemáticas aplicadas. De forma general, la optimización incluye el descubrimiento de los "mejores valores" de alguna función objetivo dado un dominio definido, incluyendo una variedad de diferentes tipos de funciones objetivo y diferentes tipos de dominios.
+
+###Importante:
+
+**Convexo**: con beso (extremos hacia abajo). En este conjunto los elementos a analizar están en el mismo área, bajo la curva y dentro de una región factible (forma triángulo)
+
+**Cóncavo**: con cava (extremos hacia arriba). Sin embargo, en el concavo, los elementos quedan separados (churro parecido a calabaza en forma de U) si trazamos una línea recta.
+
+https://www.youtube.com/watch?v=nwm3MNI42Xc
+
+
+
+##Algoritmos de optimización
+
+
+
+* **Linear programming**
+    * Simplex algorithm of George Dantzig, designed for linear programming.
+    * Extensions of the simplex algorithm, designed for quadratic programming and for linear-fractional programming.
+    * Variants of the simplex algorithm that are especially suited for network optimization.
+
+* **Newton's method in optimization**
+Compared with gradient descent (green) and Newton's method (red) for minimizing a function (with small step sizes). Newton's method uses curvature information to take a more direct route.
+
+* **Gradient descent** (includes Stochastic Gradient descent)
+
+####Diferencia entre gradient descent and stochastic gradient descent
+
+https://www.quora.com/Whats-the-difference-between-gradient-descent-and-stochastic-gradient-descent
+
+* GD derministic (classique) vs SGD stochastic (probabilistic )
+
+Gradient descent is deterministic,which means that every time you run GD for a given training set, you will get the same optimum in the same number of iterations.  Stochastic gradient descent is, well, stochastic.  Because you are no longer using your entire training set a once, and instead picking one or more examples at a time in some likely random fashion, each time you tun SGD you will obtain a different optimum and a unique cost vs. iteration history.
+
+
+* GD (batch) vs SGD (online)
+* GD (train with ALL dataset) vs SGD (train ONE random dataset)
+* GD (slow convergence) vs SGD (fast convergence)
+
+Generally stochastic GD is preferred for being faster as it is optimizing parameter on one training example at a time till it converges. On the other hand, gradient descent(called Batch GD) optimizes parameter on whole training set every iteration till convergence. This makes Batch GD slow but deterministic. 
+
+------
+
+
+For a quick simple explanation:
+
+   In both gradient descent (GD) and stochastic gradient descent (SGD), you update a set of parameters in an iterative manner to minimize an error function.
+
+While in GD, you have to run through ALL the samples in your training set to do a single update for a parameter in a particular iteration, in SGD, on the other hand, you use ONLY ONE training sample from your training set to do the update for a parameter in a particular iteration.
+
+Thus, if the number of training samples are large, in fact very large, then using gradient descent may take too long because in every iteration when you are updating the values of the parameters, you are running through the complete training set. On the other hand, using SGD will be faster because you use only one training sample and it starts improving itself right away from the first sample.
+
+SGD often converges much faster compared to GD but the error function is not as well minimized as in the case of GD. Often in most cases, the close approximation that you get in SGD for the parameter values are enough because they reach the optimal values and keep oscillating there.
+
+If you need an example of this with a practical case, check Andrew NG's notes here where he clearly shows you the steps involved in both the cases. http://cs229.stanford.edu/notes/...
+
+
+## 1. Programación lineal
+
+*La programación lineal es el campo de la optimización matemática dedicado a **maximizar o minimizar** (optimizar) una función lineal, denominada función objetivo, de tal forma que las variables de dicha función estén sujetas a una serie de restricciones expresadas mediante un sistema de inecuaciones también lineales. Los métodos más recurridos para resolver problemas de programación lineal son **algoritmos de pivote**, en particular los algoritmos **simplex**.*
+
+Linear programming is the process of taking various linear inequalities relating to some situation, and finding the "best" value obtainable under those conditions. A typical example would be taking the limitations of materials and labor, and then determining the "best" production levels for maximal profits under those conditions.
+
+In "real life", linear programming is part of a very important area of mathematics called "optimization techniques". This field of study (or at least the applied results of it) are used every day in the organization and allocation of resources. These "real life" systems can have dozens or hundreds of variables, or more. In algebra, though, you'll only work with the simple (and graphable) two-variable linear case.
+
+The general process for solving linear-programming exercises is to graph the inequalities (called the "constraints") to form a walled-off area on the x,y-plane (called the **"feasibility region"**). Then you figure out the coordinates of the corners of this feasibility region (that is, you find the intersection points of the various pairs of lines), and test these corner points in the formula (called the **"optimization equation"**) for which you're trying to find the highest or lowest value.
+
+Gráfico región factible en optimización convexa: http://www.purplemath.com/modules/linprog.htm
+
+#####Bibliography:
+
+http://www.wekaleamstudios.co.uk/posts/solving-linear-programming-problems-with-the-gnu-linear-programming-kit/
+http://icyrock.com/blog/2013/12/linear-programming-in-r-using-lpsolve/
+
+Apuntes academia Gio (ver email ppvarona: Optimizacion)
+
+
+
+
+#### Principales campos de la Programación Lineal
+
+Optaremos por una o por otra dependiendo de nuestra función objetivo (entero, decimal, etc) y nuestro conjunto factible (convexo, cóncavo, lineal, no lineal, etc.)
+
+• **Programación Convexa** estudia el caso en que la función objetivo  es convexa (minimización) o cóncava (maximización) y el conjunto de restricciones es convexo. Este puede ser visto como un caso particular de la **programación no lineal** (gráficamente no es una linea recta) o como la generalización de la programación lineal o de la convexa cuadrática.
+
+• **Programación Lineal** (PL) es un tipo de **programación convexa** (con función objetivo lineal), estudia el caso en el que la función objetivo f es lineal y el conjunto de restricciones se especifica usando solamente ecuaciones e inecuaciones lineales. Dicho conjunto es llamado poliedro o politopo si está limitado.
+
+• Programación de Cono de Segundo Orden(PCSO) es un programa convexo e incluye ciertos tipos de programas cuadráticos.
+
+• Programación Semidefinida(PSD) es un subcampo de la optimización convexa donde las variables fundamentales son matrices semidefinidas. Es una generalización de la programación lineal y la programación cuadrática convexa. Matrices.
+
+• Programación Cónica es una forma general de la programación convexa. PL, PCSO y PSD pueden todos ser vistos como programas cónicos con el tipo de cono apropiado.
+
+• Programación Geométrica es una técnica por medio de la cual el objetivo y las restricciones de desigualdad expresados como polinomios y las restricciones de igualdad como monomios, pueden ser transformados en un programa convexo.
+
+• Programación con Enteros estudia programas lineales en los cuales algunas o todas las variables están obligadas a tomar valores enteros. Esta no es convexa y en general es mucho más difícil que la programación lineal regular.
+
+• Programación Cuadrática permite a la función objetivo tener términos cuadráticos, mientras que el conjunto factible pueda ser especificado con ecuaciones e inecuaciones lineales. Para formas específicas del término cuadrático, esta es un tipo de programación convexa.
+
+• Programación Fraccionaria estudia la optimización de razones de dos funciones no lineales. La clase especial de programas fraccionarios cóncavos puede ser transformada a un problema de optimización convexa.
+
+• Programación No Lineal estudia el caso general en el que la función objetivo, o las restricciones, o ambos, contienen partes no lineales. Este puede o no, ser un programa convexo. En general, si el programa es convexo afecta la dificultad de resolución.
+
+• **Programación Estocástica** (no estático, probabilístico, aleatorio, ONLINE, random) estudia el caso en el que alguna de las restricciones o parámetros depende de variables aleatorias. Simulación Montecarlo
+
+• Programación Robusta es, como la programación estocástica, un intento por capturar la incertidumbre en los datos fundamentales del problema de optimización. Esto se hace mediante el uso de variables aleatorias, pero en cambio, el problema es resuelto teniendo en cuenta imprecisiones en los datos de entrada.
+
+• Optimización Combinatoria se preocupa de los problemas donde el conjunto de soluciones factibles es discreto o puede ser reducido a uno discreto. Números de un dado (no importa el orden), ganadores de un premio (importa orden)
+
+• Optimización Estocástica para usar con mediciones de una función aleatoria (ruidosa) o entradas aleatorias en el proceso de búsqueda.
+
+• Optimización Dimensional-Infinita estudia el caso donde el conjunto de soluciones factibles es un subconjunto de un espacio de dimensión infinita, por ejemplo un espacio de funciones.
+
+• Heurísticas y Metaheurísticas hacen pocas suposiciones o no, sobre el problema que está siendo optimizado. Usualmente, las heurísticas no garantizan que cualquier solución óptima necesita ser encontrada. Luego, las heurísticas son usadas para encontrar soluciones aproximadas para muchos problemas de optimización complicados.
+
+• Satisfacción de Restricción estudia el caso en el cual la función objetivo f es constante (esta es usada en inteligencia artificial, particularmente en razonamiento automatizado)
+
+• Programación con restricción
+
+• Programación Disyuntiva se usa cuando al menos una restricción puede ser satisfecha pero no todas. Esta es de uso particular en la programación en un número de subcampos, las técnicas son diseñadas principalmente para la optimización en contextos dinámicos (es decir, toma de decisiones con el transcurso del tiempo): 
+
+• Cálculo de Variaciones busca optimizar un objetivo definido sobre muchos puntos con el tiempo, considerando como la función objetivo cambia si el cambio es pequeño en el camino de elección.
+
+• Teoría del Control Óptimo es una generalización del cálculo de variaciones.
+
+• Programación Dinámica estudia el caso en el que la estrategia de optimización se basa en la división del problema en 
+subproblemas más pequeños. La ecuación que describe la relación entre estos subproblemas se llama ecuación de 
+Bellman. Se mueve en el tiempo. Reducción del tiempo de ejecución de un algoritmo, por ejemplo. Fibonacci.
+
+• Programación Matemática con Restricciones de Equilibrio es donde las restricciones incluyen desigualdades variables o 
+complementarias.
+
+
+### 1. Método Simplex : solución óptima
+
+En optimización matemática, el término algoritmo Símplex habitualmente se refiere a un conjunto de métodos muy usados para resolver problemas de programación lineal, en los cuales se busca el máximo de una función lineal sobre un conjunto de variables que satisfaga un conjunto de inecuaciones lineales. El algoritmo Símplex primal fue desarrollado por el matemático norteamericano George Dantzig en 1947, y procede examinando vértices adyacentes del poliedro de soluciones. Un algoritmo Símplex es un algoritmo de pivote.
+
+Un sistema de desigualdades lineales define un poliedro como una región factible. **El algoritmo Símplex comienza en un vértice y se mueve a lo largo de las aristas del poliedro hasta que alcanza el vértice de la solución óptima.**
+
+
+Recuérdese que cuando se utiliza el **método simplex** para resolver un programa lineal, se reconoce una solución óptima cuando todos los elementos del renglón de evaluación (Cj – Zj) son ≤ 0.
+En nuestro caso en R la **solución óptima : solve(lprec) = 0**
+
+````{r, cache=TRUE, eval=FALSE}
+
+#### SAMPLE DATA
+
+### AGRICULTOR GREGORY : ¿Cuántas hectareas tengo que planntar de trigo y cuántas de cereal para sacar el mayor beneficio?
+
+## Problem
+# Suppose a farmer has 75 acres on which to plant two crops: wheat and barley. To produce these crops, it costs the farmer (for seed, fertilizer, etc.) $120 per acre for the wheat and $210 per acre for the barley. The farmer has $15000 available for expenses. But after the harvest, the farmer must store the crops while awaiting favourable market conditions. The farmer has storage space for 4000 bushels. Each acre yields an average of 110 bushels of wheat or 30 bushels of barley. If the net profit per bushel of wheat (after all expenses have been subtracted) is $1.30 and for barley is $2.00, how should the farmer plant the 75 acres to maximize profit?
+
+
+#############
+
+# Tierra:
+# 75 hectareas para plantar : trigo y cereal
+
+# Gastos (semilla, fertilizantes, etc):
+# Trigo: 120 dolares por hectarea
+# Cereal: 210 dolares por hectarea
+
+# Prespuesto total: 15.000 dolares
+
+# Espacio en el almacén: 4000 sacos
+# 110 sacos de trigo por hectarea
+# 30 sacos de cereal por hectarea
+
+# Beneficio por saco:
+# Trigo: 1.30 dolares
+# Cereal: 2.00 dolares
+
+
+########
+
+#Mathematical definition
+
+#x = hectareas trigo
+#y = hectareas cereal
+
+#maximize
+
+## Beneficio: sacos que puedo almacenar por el precio del saco por hectareas cultivadas de cada siembra
+#    Profit = (110)(1.30)x + (30)(2.00)y = 143x + 60y
+
+#subject to
+#Gastos por hectarea de cada siembra, limitados por mi presupuesto
+#    120x + 210y <= 15000
+#Almacenamiento de sacos por cada hectarea por siempre, limitados por mi cantidad de sacos posibles a almacenar
+#    110x + 30y <= 4000
+#Hectareas que tengo
+#    x + y <= 75
+#Tengo que sembrar de los tipos, o solo de uno, o no sembrar.
+#    x >= 0
+#    y >= 0
+
+
+
+
+
+
+library("lpSolveAPI")
+lprec <- make.lp(0, 2)  # tengo dos variables a resolver x e y
+lp.control(lprec, sense="max")
+set.objfn(lprec, c(143, 60))
+add.constraint(lprec, c(120, 210), "<=", 15000)
+add.constraint(lprec, c(110, 30), "<=", 4000)
+add.constraint(lprec, c(1, 1), "<=", 75)
+
+lprec
+
+solve(lprec)
+#Get maximum profit
+get.objective(lprec)
+#[1] 6315.625 dolares como beneficio máximo
+
+#Get the solution
+get.variables(lprec)
+#[1] 21.875 hectareas de trigo y  53.125 hectareas de cereal
+
+
+get.sensitivity.rhs(lprec)
+
+### SOLUTION
+#Thus, to achieve the maximum profit ($6315.625), the farmer should plant 21.875 acres of wheat and 53.125 acres of barley.
+
+
+
+
+```````
+
+
+
+### 1.2. Método Simplex : análisis de sensibilidad
+
+Analisis de sensibilidad (en excell): http://www.investigaciondeoperaciones.net/analisis_de_sensibilidad.html
+
+**Análisis de sensibilidad con la tabla simplex**
+
+El análisis de sensibilidad para programas lineales implica el **cálculo de intervalos** para los coeficientes
+de la función objetivo y para los valores de los lados derechos, así como también de los precios
+sombra y/o duales.
+
+El objetivo es **analizar cómo afectaría a la solución obtenida y al valor de la función objetivo la variación dentro de un rango “tolerable”**, de uno de los parámetros, manteniendo fijos los restantes.
+
+
+El Análisis de Sensibilidad se utiliza para examinar los efectos de cambios en tres áreas diferenciadas del problema: 
+
+** (1) Los coeficientes de la función objetivo (**coeficientes objetivo**). Los cambios en los  coeficientes objetivos NO afectan la forma de la región factible, por lo que no afectarán a la solución óptima (aunque sí al valor de la función objetivo). 
+
+** (2) Los **coeficientes tecnológicos** (aquellos coeficientes que afectan a las variables de las restricciones, situados a la izquierda de la desigualdad). Los cambios en estos coeficientes provocarán cambios sustanciales en la forma de la región factible. 
+
+** (3) Los **recursos disponibles** (los términos independientes de cada restricción, situados a la derecha de la desigualdad). Intuitivamente (para 2 variables), los cambios en el RHS suponen desplazamientos paralelos de las rectas asociadas a las restricciones, lo cual hará variar la forma de la región factible y, con ello, a la solución óptima.
+
+(ver apuntes Gio email further information)
+
+
+
+En la parte de código R que acabamos de ver bastaría con añadir las partes de código de get.sensitivity.*(lprec).
+
+
+
+
+A continuación otros ejemplos con dato real:
+
+`````{r,  eval= FALSE}
+
+## BBVA DATA (Coste por leads e inversión por canal SEM y display)
+
+### ¿Cuál es el número total de leads que puedo conseguir por canal?
+
+#des_last_touch_channel  totalconsumo		leads_shapley		cpl_shapley
+#SEM	    19729		209		94.13
+#Display	28506		465		61.26
+#Suma prespuesto tota sem + display = 48.388 euros
+
+## Maximizamos leads
+#maximaze:
+#  leads = x (leads sem) + y (leads display)
+#subjet to prespuesto que tengo:
+#  94.14 x + 61.26 y <= 48.388 euros
+
+library("lpSolveAPI")
+lprec <- make.lp(0, 2)  # tengo dos variables a resolver x e y
+lp.control(lprec, sense="max")
+set.objfn(lprec, c(1, 1))
+add.constraint(lprec, c(94.13, 61.26), "<=", 48335)
+
+lprec
+
+solve(lprec)
+#Get maximum profit
+get.objective(lprec)
+#[1] 789.014 leads maximos
+
+#Get the solution
+get.variables(lprec)
+#[1]   0.000 leads sem 789.014 leads display
+
+### SOLUCION:
+# El número máximo de leads es 789 que puede conseguirse a través de Display todos 
+
+
+
+
+###########
+
+## ¿Cuánto invertir por canal para alcanzar X leads?
+
+#Quiero obtener 674 leads (209 por sem y 465 display) en el mes de mayo y por tanto quiero saber cuanto invertir por canal.
+
+#des_last_touch_channel  totalconsumo  	leads_shapley		cpl_shapley
+#SEM	    19729		209		94.13
+#Display	28506		465		61.26
+
+#Suma prespuesto tota sem + display = 48.388 euros
+#Total leads 674 leads mes de mayo ( sem + display )
+
+
+
+library("lpSolveAPI")
+lprec <- make.lp(0, 2)  # tengo dos variables a resolver x e y
+lp.control(lprec, sense="max")
+set.objfn(lprec, c(1, 1))
+add.constraint(lprec, c(1, 1), "<=", 48335)
+
+lprec
+
+solve(lprec)
+#Get maximum profit
+get.objective(lprec)
+#[1] 789.014 leads maximos
+
+#Get the solution
+get.variables(lprec)
+#[1]   0.000 leads sem 789.014 leads display
+
+### SOLUCION:
+# El número máximo de leads es 789 que puede conseguirse a través de Display todos 
+
+
+
+``````
+
+
+
+
+
+
+
+Otra library en R
+
+````{r, cache=TRUE, eval=FALSE}
+
+## other LIBRARY Rglpk
+
+## SAMPLE DATA
+
+
+obj <- c(2, 4, 3)
+mat <- matrix(c(3, 2, 1, 4, 1, 3, 2, 2, 2), nrow = 3)
+dir <- c("<=", "<=", "<=")
+rhs <- c(60, 40, 80)
+max <- TRUE
+control <- FALSE
+
+#Rglpk_solve_LP(obj, mat, dir, rhs, max = max)
+
+
+
+## BBVA DATA
+  
+#LEADS
+#sem_mayo, display_mayo, sem_junio, display_junio, sem_julio, display_julio
+#209, 465,266,1695, 231, 1657
+#940, 3583
+
+#CPL
+#94.13, 61.26, 85.2, 63.36, 79.15, 52.31
+
+#RESTRICCIONES PRECIO POR LEAD
+#dir <- c("<=", "<=")
+#rhs <- c(36, 90)
+
+
+
+
+obj <- c(940, 3583)
+mat <- matrix(c(94, 61), nrow = 2)
+dir <- c("<=", "<=")
+rhs <- c(19729,28506)
+max <- TRUE
+control <- FALSE
+
+#Rglpk_solve_LP(obj, mat, dir, rhs, max = max, control = TRUE)
+
+
+
+`````
+
+
+##2. Gradient descent
+
+Gradient descent method is a way to find a local minimum of a function. The way it works is we start with an initial guess of the solution and we take the gradient of the function at that point. We step the solution in the negative direction of the gradient and we repeat the process. The algorithm will eventually converge where the gradient is zero (which correspond to a local minimum). Its brother, the gradient ascent, finds the local maximum nearer the current solution by stepping it towards the positive direction of the gradient. They are both first-order algorithms because they take only the first derivative of the function.
+
+Let's say we are trying to find the solution to the minimum of some function f(x). Given some initial value x0 for x, we can change its value in many directions (proportional to the dimension of x: with only one dimension, we can make it higher or lower). To figure out what is the best direction to minimize f, we take the gradient ∇f of it (the derivative along every dimension of x). Intuitively, the gradient will give the slope of the curve at that x and its direction will point to an increase in the function. So we change x in the opposite direction to lower the function value:
+xk+1=xk−λ∇f(xk)
+The λ>0 is a small number that forces the algorithm to make small jumps. That keeps the algorithm stable and its optimal value depends on the function. Given stable conditions (a certain choice of λ), it is guaranteed that f(xk+1)≤f(xk).
+
+http://www.onmyphd.com/?p=gradient.descent&ckattempt=1
+
+#####Example:
+
+Suppose you want to minimize the function 1.2 \* (x-2)^2 + 3.2. 
+
+**BASIC CALCULUS: 1st derivative f'(x) to find the minimum**
+Basic calculus requires that we find the 1st derivative and solve for the value of x such that f'(x) = 0. This is easy enough to do, f'(x) = 2\*1.2\*(x-2). Its easy to see that a value of 2 satisfies f'(x) =  0. Given that the second order conditions hold, this is a minimum.
+
+**GRADIENT DESCENT with more complext functions**
+Its not alwasys the case that we would get a function so easy to work with, and in many cases we may need to numerically estimate the value that minimizes the function. Gradient descent offers a way to do this. Recall from my previous post the gradient descent algorithm can be summarized as follows:
+
+repeat until convergence {
+Xn+1 = Xn – α∇F(Xn)  or  x := x – α∇F(x)  (depending on your notational preferences)
+}
+
+Where ∇F(x)  would be the derivative we calculated above for the function at hand and α is the learning rate. This can easily be implemented R. The following code finds the values of x that minimize the function above and plots the progress of the algorithm with each iteration. (as depicted in the image below)
+
+In this case, both classical and gradient descent converge at 2 as the minimum of the function.
+
+````{r, cache=TRUE}
+
+
+#  ----------------------------------------------------------------------------------
+# |PROGRAM NAME: gradient_descent_R
+# |DATE: 11/27/11
+# |CREATED BY: MATT BOGARD 
+# |PROJECT FILE:              
+# |----------------------------------------------------------------------------------
+# | PURPOSE: illustration of gradient descent algorithm
+# | REFERENCE: adapted from : http://www.cs.colostate.edu/~anderson/cs545/Lectures/week6day2/week6day2.pdf                
+# | 
+#  ---------------------------------------------------------------------------------
+ 
+xs <- seq(0,4,len=20) # create some values
+ 
+# define the function we want to optimize
+ 
+f <-  function(x) {
+1.2 * (x-2)^2 + 3.2
+}
+ 
+# plot the function 
+plot(xs , f (xs), type="l",xlab="x",ylab=expression(1.2(x-2)^2 +3.2))
+ 
+# calculate the gradeint df/dx
+ 
+grad <- function(x){
+  1.2*2*(x-2)
+}
+ 
+ 
+# df/dx = 2.4(x-2), if x = 2 then 2.4(2-2) = 0
+# The actual solution we will approximate with gradeint descent
+# is  x = 2 as depicted in the plot below
+ 
+lines (c (2,2), c (3,8), col="red",lty=2)
+text (2.1,7, "Closedform solution",col="red",pos=4)
+ 
+ 
+# gradient descent implementation
+x <- 0.1 # initialize the first guess for x-value
+xtrace <- x # store x -values for graphing purposes (initial)
+ftrace <- f(x) # store y-values (function evaluated at x) for graphing purposes (initial)
+stepFactor <- 0.6 # learning rate 'alpha'
+for (step in 1:100) {
+x <- x - stepFactor*grad(x) # gradient descent update
+xtrace <- c(xtrace,x) # update for graph
+ftrace <- c(ftrace,f(x)) # update for graph
+}
+ 
+lines ( xtrace , ftrace , type="b",col="blue")
+text (0.5,6, "Gradient Descent",col="blue",pos= 4)
+ 
+# print final value of x
+print(x) # x converges to 2.0
+````

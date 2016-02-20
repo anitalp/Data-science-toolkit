@@ -1,0 +1,648 @@
+Cluster Analysis
+========================
+
+###Importante:
+
+R has an amazing variety of functions for cluster analysis. In this section, I will describe three of the many approaches: 
+
+* hierarchical 
+    - agglomerative, parte de pequeños clusters que se van uniendo
+    - disociative, parte de un cluster inicial que se va separando
+* partitioning, donde K los dedide el usuario (Kmeans) 
+* model based (Gaussian mixture) 
+
+Tutorial on main Clustering algorithms: http://home.deib.polimi.it/matteucc/Clustering/tutorial_html/index.html
+
+While there are no best solutions for the problem of determining the number of clusters to extract, several approaches are given below.
+
+**Cuidado**
+
+Nuestro dato debe cumplir lo siguiente: 
+
+* Normalización de variables necesaria
+* Correlación entre variables debe ser negativa
+* Outliers, ¿cómo evitarlos para que no desvirtúen nuestro cluster? 
+**Escalera de transformaciones de Tukey**:
+    - Asimetría positiva (por encima del boxplot):
+        1. Raíz cuadrada
+        2. Transformación logarítmica
+        3. Negativo del inverso de la raíz cuadrada (-1/raiz cuadrada de X)
+        
+    - Asimetría negativa (por debajo del boxplot):
+        1. Antilogaritmo -> exponencial
+
+
+
+
+**Preguntas:**
+
+####¿Cuando usar un hierarchical / partioning / model based?
+
+Factores a tener en cuenta: tamaño de la muestra, tipo de variables, forma del cluster y elección o no de K)
+
+Considerations to keep in mind: 
+
+* K-means clustering: larger datasets than hierarchical cluster approaches. El hierarchical no es muy escalable.
+* The use of means implies that all variables must be continuous and the approach can be severely affected by outliers. Sin embargo hierarchical y model base aceptan variables continuas y discretas.
+* K-means also perform poorly in the presence of non-convex (e.g., U-shaped) clusters.
+* En K-means hay que inicializar los k, mientras que el hierarchical y el Gaussian los definen por sí solos.
+* Guassian mixture models (GMM) estimate mean and covariance, Kmeans only mean.
+* GMM takes more time to converge than Kmeans.
+* GMM is more flexible
+* Kmeans performs Hard clustering:
+  – Data point is deterministically assigned to oneand only one cluster
+  – But in reality clusters may overlap
+* GMM Soft-clustering:
+  – Data points are assigned to clusters with certain probabilities
+
+
+####¿Cómo calcular numero de clusters en un Kmeans:
+
+No es trivial y lo mejor representarlo visualmente.
+
+Casi todos las técnicas, 8!! : http://stackoverflow.com/questions/15376075/cluster-analysis-in-r-determine-the-optimal-number-of-clusters
+
+Aquí las más comunes: 
+
+0a) Se puede empezar usando un *jerarquico para ver en el dendongrama* cual es el punto de mayor distancia entre las "ramas" y pasando este número de clusters al Kmeans
+
+0b) *Random inizialitation* (prueba error)
+
+http://www.holehouse.org/mlclass/13_Clustering.html
+
+k-means algorithm
+
+    0. Initialize cluster centers (tras ver preseleccionar n?mero de clusters)
+    1. Assign observations to closest cluster center
+    2. Revise cluster centers as mean of assigned observations (mover centroide ajustando medias una otra vez)
+    3. Repeat 1.+2. until convergence
+
+
+1) **elbow method**,a estrella (ver ejemplos abajo):
+
+Looks at the percentage of variance explained as a function of the number of clusters: One should choose a number of clusters so that adding another cluster doesn't give much better modeling of the data. Calculando el % de la varianza que representa cada cluster con suma de cuadrados del grupo o los eigen values.
+
+**Sum of squares** : The sum of squares represents a measure of variation or deviation from the mean. It is calculated as a summation of the squares of the differences from the mean. The calculation of the total sum of squares considers both the sum of squares from the factors and from randomness or error.
+
+Similar a : 
+
+*%varianza acumulada EIGENVALUES
+
+*plot de matriz de distancias y nb de clusters (a mayor distancia, punto de inflexi?n)
+(ver apuntes Gio)
+
+
+http://stackoverflow.com/questions/15376075/cluster-analysis-in-r-determine-the-optimal-number-of-clusters/15376462#15376462 
+
+2) Optimum average **silhouette** width en Kmeans
+
+You can do partitioning around medoids to estimate the number of clusters using the pamk function in the fpc package.
+
+
+3) **Calinsky criterion**: Another approach to diagnosing how many clusters suit the data. In this case we try 1 to 10 groups.
+
+4) **Gaussian mixture models** (model based): Bayesian Information Criterion for Expectation-Maximization
+
+Determine the optimal model and number of clusters according to the Bayesian Information Criterion for expectation-maximization, initialized by hierarchical clustering for parameterized Gaussian mixture models.
+Punto donde se unan las líneas como K clusters.
+
+
+####¿Que linkage elegir en un cluster jerarquico? (complete, single, average , centroid):
+
+* Complete: maximal intercluster dissimilarity
+* Singe: Minimal intercluster dissimilarity
+* Average: mean intercluster dissimilarity
+* Centroid: dissimilarity between the centroid for clusters A and B
+
+equivale a las distancias, por tanto dependiendo de la forma que busquemos elegiremos uno u otro:
+
+
+Por otra lado tambi?n est?n las distancias entre observaciones y sus formas:
+
+* Vecino mas cercano: forma de eclipse
+* Vecino mas lejano: forma esferica
+* Promedio de grupo: clusters m?s robustos (KMEANS)
+* Distancia al centroide: clusters m?s robustos
+
+
+####Distancia mas comunes de similaridad m?trica (ver apuntes Gio)
+
+#####Variables cualitativas:
+
+* Coseno del ángulo entre vectores
+* Coeficiente de correlación
+
+Medidas para datos dicotómicos (binarios):
+
+* Medida de Ochiai
+* Medida de Russell y Rao
+* Meidad de parejas simples
+* Medida de Jaccard
+* Medida de Dice
+* Medida de Tanimoto
+* Medida de Sokal y Sneath
+
+
+#####Variables cuantitativas o continuas:
+
+* Distancia Eucl?dea
+* Distancia minkowski (Manhattan)
+* Distancia d1 o City Block
+* Distancia de Tchebychev o del m?ximo
+* Distancia de Mahalanobis
+
+Variables discretas:
+
+* Distancia de Chi-cuadrado y phi-cuadrado
+
+
+
+####¿Cómo elegir distancia de dissimilarity?
+
+* Correlation based distance: focus on the *shapes* of observations profiles rathers than their magnitudes/values (similar shape line, high correlation)
+* Euclidean distance: focus on the values and their *magnitudes* (similar values, high Eucledian distance, lines closer)
+
+See page 398 book Introduction to Statistcal learning
+
+Ejemplo: queremos encontrar similar shoppers
+
+Si Euclidean: shoppers who has bought few items (infrequent shopper) will be clustered together
+Si correlation based: shoppers with similar preferences (similar items) will be clustered together (we choose this one then!)
+
+Por otra lado también están las distancias entre observaciones y sus formas:
+
+* Vecino mas cercano: forma de eclipse
+* Vecino mas lejano: forma esferica
+* Promedio de grupo: clusters más robustos (KMEANS)
+* Distancia al centroide: clusters más robustos
+
+
+####¿Como evaluar los resultados de los diferentes clusters?  - Cluster validation
+
+
+
+
+**Internal evaluation**
+When a clustering result is evaluated based on the data that was clustered itself, this is called internal evaluation. These methods usually assign the best score to the algorithm that produces clusters with high similarity within a cluster and low similarity between clusters. One drawback of using internal criteria in cluster evaluation is that high scores on an internal measure do not necessarily result in effective information retrieval applications. For example, k-Means clustering naturally optimizes object distances, and a distance-based internal criterion will likely overrate the resulting clustering.
+
+The following methods can be used to assess the quality of clustering algorithms based on internal criterion:
+
+- *Davies–Bouldin index* (puntos del cluster muy amontonados y clusters bien distantes entre ellos)
+Since algorithms that produce clusters with* low intra-cluster distances (high intra-cluster similarity) and high inter-cluster distances (low inter-cluster similarity)* will have a low Davies–Bouldin index, the clustering algorithm that produces a collection of *clusters with the smallest Davies–Bouldin index is considered the best algorithm based on this criterion*.
+
+- *Dunn index* (puntos del clsuter distantes pero clusters cercanos entre ellos)
+The Dunn index aims to identify *dense and well-separated clusters*. It is defined as the ratio between the minimal inter-cluster distance to maximal intra-cluster distance. The inter-cluster distance d(i,j) between two clusters may be any number of distance measures, such as the distance between the centroids of the clusters. Similarly, the intra-cluster distance d '(k) may be measured in a variety ways, such as the maximal distance between any pair of elements in cluster k. Since internal criterion seek *clusters with high intra-cluster similarity and low inter-cluster* similarity, algorithms that produce clusters with *high Dunn index are more desirable*.
+
+- *Silhouette coefficient*
+The silhouette coefficient *contrasts the average distance to elements in the same cluster with the average distance to elements in other clusters*. Objects with a *high silhouette value are considered well clustered*, objects with a low value may be outliers. This index works well with k-means clustering, and is also used to determine the optimal number of clusters.
+
+
+
+
+**External evaluation**
+
+In external evaluation, clustering results are evaluated based on data that was not used for clustering, such as known class labels and external benchmarks. Such benchmarks consist of a set of pre-classified items, and these sets are often created by human (experts). Thus, the benchmark sets can be thought of as a gold standard for evaluation. These types of evaluation methods measure how close the clustering is to the predetermined benchmark classes. However, it has recently been discussed whether this is adequate for real data, or only on synthetic data sets with a factual ground truth, since classes can contain internal structure, the attributes present may not allow separation of clusters or the classes may contain anomalies.
+
+A number of measures are adapted from variants used to evaluate classification tasks. In place of counting the number of times a class was correctly assigned to a single data point (known as true positives), such pair counting metrics assess whether each pair of data points that is truly in the same cluster is predicted to be in the same cluster.
+
+Some of the measures of quality of a cluster algorithm using external criterion include:
+
+* Rand measure
+* F-measure
+* Jaccard index
+* Mutual information
+* Correlation matrix
+
+
+
+----------
+
+
+
+*Data Preparation*
+
+Prior to clustering data, you may want to remove or estimate *missing data* and *rescale variables*, *correlation* and *outliers* for comparability.
+
+```{r, cache=TRUE}
+
+library(outliers)
+
+# Prepare Data
+#mydata <- mtcars
+mydata <- USArrests
+#mydata <- faithful
+
+#mydata <- read.csv("/Users/alaguna/Desktop/Ana/Scripts_machinelearning_statistics/DATO_juguete/dato_categorizador_5K.csv", sep=",")
+
+#myvars <- c("cod_idcontra_movcuen", "imp_mov", "nivel1", "nivel2")
+
+#mydata$nivel1_R <- as.integer(mydata$nivel1)
+#mydata$imp_mov_R <- as.integer(mydata$imp_mov)
+
+#myvars <- c( "imp_mov_R", "nivel1_R")
+
+#newdata <- mydata[myvars]
+#mydata <- newdata
+#mydata <- read.csv("/Users/alaguna/Desktop/Ana/Scripts_machinelearning_statistics/DATO_juguete/septiembre15_segmcomport_allmetrics_20K.csv", sep=",")
+
+head(mydata)
+summary(mydata)
+
+remove_outliers <- function(x, na.rm = TRUE, ...) {
+  qnt <- quantile(x, probs=c(.25, .75), na.rm = na.rm, ...)
+  H <- 1.5 * IQR(x, na.rm = na.rm)
+  y <- x
+  y[x < (qnt[1] - H)] <- NA
+  y[x > (qnt[2] + H)] <- NA
+  y
+}
+
+out.rem<-function(x) {
+  x[which(x==outlier(x))]=NA
+  x
+}
+
+mydata <- apply(mydata,2,out.rem)
+
+#rm.outlier(mydata,opposite=TRUE)
+
+mydata <- scale(mydata) # standardize variables
+
+mydata <- na.omit(mydata) # listwise deletion of missing
+
+
+
+
+##scale only numeric
+
+#ind <- sapply(mydata, is.numeric)
+#mydata[ind] <- lapply(mydata[ind], scale)
+
+
+
+```
+
+##1.Partitioning CLUSTERING
+
+###K-means clustering information
+
+K-means clustering is the most popular partitioning method. It requires the analyst to specify the number of clusters to extract. A plot of the within groups sum of squares by number of clusters extracted can help determine the appropriate number of clusters. The analyst looks for a bend in the plot similar to a scree test in factor analysis. See Everitt & Hothorn (pg. 251).
+
+
+
+###K-means: DETERMINE NUMBER OF CLUSTERS
+
+#### 1) Elbow in the sum of squared error (SSE)
+
+Seleccionamos el número de clusters como el punto de inflexión.
+
+```{r, cache=TRUE}
+
+# Determine number of clusters
+wss <- (nrow(mydata)-1)*sum(apply(mydata,2,var))
+
+for (i in 2:15) wss[i] <- sum(kmeans(mydata, centers=i)$withinss)
+
+plot(1:15, wss, type="b", xlab="Number of Clusters",
+  ylab="Within groups sum of squares")
+
+#bbvadata: punto inflexion entre 7 y 9
+
+
+###### EIGENVALUES
+####### LOS DOS PRIMEROS VALORES FACTORES EXPLICAN EL 87% DE LA VARIANZA, LO QUE NOS MUESTRA EL GRAFICO DE LA SUMA DE CUADRADOS
+
+
+sygma <- eigen(cov(mydata), symmetric =TRUE)
+pca1.eigen.stats  <- data.frame(eigenvalue  =  sygma$values,  
+                                
+                                proportion	=	sygma$values/sum(sygma$values),
+                                
+                                cumulative	=	cumsum(sygma$values)/sum(sygma$values))
+
+pca1.eigen.stats
+````
+
+#### 2) Optimum average silhouette width en Kmeans
+
+
+You can do partitioning around medoids to estimate the number of clusters using the pamk function in the fpc package.
+
+A robust version of K-means based on mediods can be invoked by using pam( ) instead of kmeans( ). The function pamk( ) in the fpc package is a wrapper for pam that also prints the suggested number of clusters based on optimum average silhouette width.
+
+````{r, cache=TRUE}
+library(fpc)
+library(pamr)
+shil <- pam(mydata,15)
+# plot(pamk(mydata,8))
+
+
+# we could also do:
+library(fpc)
+asw <- numeric(15)
+for (k in 2:15)
+  asw[[k]] <- pam(mydata, k) $ silinfo $ avg.width
+k.best <- which.max(asw)
+cat("silhouette-optimal number of clusters:", k.best, "\n")
+# still 4
+# 
+
+#mydata bbva: 7
+`````
+
+#### 3) Gaussian mixture models (model based): Bayesian Information Criterion for Expectation-Maximization
+
+Determine the optimal model and number of clusters according to the Bayesian Information Criterion for expectation-maximization, initialized by hierarchical clustering for parameterized Gaussian mixture models.
+
+Punto donde se unan las líneas como K clusters.
+
+
+
+```{r, cache=TRUE, eval=FALSE, echo=TRUE}
+
+# See http://www.jstatsoft.org/v18/i06/paper
+# http://www.stat.washington.edu/research/reports/2006/tr504.pdf
+#
+library(mclust)
+# Run the function to see how many clusters
+# it finds to be optimal, set it to search for
+# at least 1 model and up 20.
+
+d_clust <- Mclust(as.matrix(mydata), G=1:15)
+d_clust
+m.best <- dim(d_clust$z)[2]
+cat("model-based optimal number of clusters:", m.best, "\n")
+# 4 clusters
+plot(d_clust)
+
+`````
+
+#### 4) Calinsky criterion
+
+Calinsky criterion: Another approach to diagnosing how many clusters suit the data. In this case we try 1 to 10 groups.
+```{r, cache=TRUE}
+
+require(vegan)
+fit <- cascadeKM(scale(mydata, center = TRUE,  scale = TRUE), 1, 15, iter = 1000)
+plot(fit, sortg = TRUE, grpmts.plot = TRUE)
+calinski.best <- as.numeric(which.max(fit$results[2,]))
+cat("Calinski criterion optimal number of clusters:", calinski.best, "\n")
+# 5 clusters!
+`````
+
+
+
+Después de determinar el número de clusters (k) con estas técnicas lanzamos nuestro algoritmo de Kmeans:
+
+###K-means clustering algorithm
+
+```{r, cache=TRUE}
+
+### Podemos ver que la varianza disminuye a partir del 5 cluster, justo en el punto de inflexión
+library(cluster)
+library(fpc)
+
+# K-Means Cluster Analysis
+fit <- kmeans(mydata, 10) # 5 cluster solution
+summary(fit)
+
+plotcluster(mydata, fit$cluster)
+clusplot(mydata,fit$cluster)
+
+plot(mydata, col=fit$cluster)
+
+# get cluster means 
+aggregate(mydata,by=list(fit$cluster),FUN=mean)
+
+# append cluster assignment
+mydata <- data.frame(mydata, fit$cluster)
+head(mydata)
+
+
+`````
+
+
+K-means Clustering (from "R in Action")
+
+http://www.r-statistics.com/2013/08/k-means-clustering-from-r-in-action/
+
+In R’s partitioning approach, observations are divided into K groups and reshuffled to form the most cohesive clusters possible according to a given criterion. There are two methods—K-means and partitioning around mediods (PAM). In this article, based on chapter 16 of R in Action, Second Edition, author Rob Kabacoff discusses K-means clustering.
+
+Until Aug 21, 2013, you can buy the book: R in Action, Second Edition with a 44% discount, using the code: “mlria2bl”.
+
+
+The most common partitioning method is the K-means cluster analysis. Conceptually, the K-means algorithm:
+
+* Selects K centroids (K rows chosen at random)
+* Assigns each data point to its closest centroid
+* Recalculates the centroids as the average of all data points in a cluster (i.e., the centroids are p-length mean vectors, where p is the number of variables)
+* Assigns data points to their closest centroids
+* Continues steps 3 and 4 until the observations are not reassigned or the maximum number of iterations (R uses 10 as a default) is reached.
+* Implementation details for this approach can vary.
+
+R uses an efficient algorithm by Hartigan and Wong (1979) that partitions the observations into k groups such that the sum of squares of the observations to their assigned cluster centers is a minimum. This means that in steps 2 and 4, each observation is assigned to the cluster with the smallest value of:
+
+equation_1_RinAction2CH16
+
+Where k is the cluster,xij is the value of the jth variable for the ith observation, and xkj-bar is the mean of the jth variable for the kth cluster.
+
+
+K-means clustering can handle larger datasets than hierarchical cluster approaches. Additionally, observations are not permanently committed to a cluster. They are moved when doing so improves the overall solution. However, the use of means implies that all variables must be continuous and the approach can be severely affected by outliers. They also perform poorly in the presence of non-convex (e.g., U-shaped) clusters.
+
+The format of the K-means function in R is kmeans(x, centers) where x is a numeric dataset (matrix or data frame) and centers is the number of clusters to extract. The function returns the cluster memberships, centroids, sums of squares (within, between, total), and cluster sizes.
+
+Since K-means cluster analysis starts with k randomly chosen centroids, a different solution can be obtained each time the function is invoked. Use the set.seed() function to guarantee that the results are reproducible. Additionally, this clustering approach can be sensitive to the initial selection of centroids. The kmeans() function has an nstart option that attempts multiple initial configurations and reports on the best one. For example, adding nstart=25 will generate 25 initial configurations. This approach is often recommended.
+
+Unlike hierarchical clustering, K-means clustering requires that the number of clusters to extract be specified in advance. Again, the NbClust package can be used as a guide. Additionally, a plot of the total within-groups sums of squares against the number of clusters in a K-means solution can be helpful. A bend in the graph can suggest the appropriate number of clusters. The graph can be produced by the following function.
+
+ 
+> wssplot <- function(data, nc=15, seed=1234){
+               wss <- (nrow(data)-1)*sum(apply(data,2,var))
+               for (i in 2:nc){
+                    set.seed(seed)
+                    wss[i] <- sum(kmeans(data, centers=i)$withinss)}
+                plot(1:nc, wss, type="b", xlab="Number of Clusters",
+                     ylab="Within groups sum of squares")}
+                     
+The data parameter is the numeric dataset to be analyzed, nc is the maximum number of clusters to consider, and seed is a random number seed.
+
+
+
+
+
+##2.Hierarchical Agglomerative
+
+There are a wide range of hierarchical clustering approaches. I have had good luck with Ward's method described below.
+
+```{r, cache=TRUE}
+# Ward Hierarchical Clustering
+d <- dist(mydata, method = "euclidean") # distance matrix
+fit <- hclust(d, method="ward.D") 
+fit_complete <- hclust(d, method="complete") 
+
+#method  
+#the agglomeration method to be used. This should be (an unambiguous abbreviation of) one of "ward.D", "ward.D2", "single", "complete", "average" (= UPGMA), "mcquitty" (= WPGMA), "median" (= WPGMC) or "centroid" (= UPGMC).
+
+plot(fit) # display dendogram
+plot(fit_complete) # display dendogram
+
+groups <- cutree(fit, k=10) # cut tree into 5 clusters
+# draw dendogram with red borders around the 5 clusters 
+rect.hclust(fit, k=5, border="red")
+
+groups_comp <- cutree(fit_complete, k=10) # cut tree into 5 clusters
+rect.hclust(fit_complete, k=5, border="green")
+
+
+`````
+
+
+
+The pvclust( ) function in the pvclust package provides p-values for hierarchical clustering based on multiscale bootstrap resampling. Clusters that are highly supported by the data will have large p values. Interpretation details are provided Suzuki. Be aware that pvclust clusters columns, not rows. Transpose your data before using.
+
+````{r, cache=TRUE}
+# Ward Hierarchical Clustering with Bootstrapped p values
+library(pvclust)
+fit <- pvclust(mydata, method.hclust="complete",method.dist="euclidean")
+plot(fit) # dendogram with p values
+# add rectangles around groups highly supported by the data
+pvrect(fit, alpha=.95)
+````
+
+
+
+
+##3. Model Based
+
+
+
+How can we extend Kmeans to make soft clustering?:
+
+http://classes.engr.oregonstate.edu/eecs/fall2011/cs434/notes/GMM-14.pdf
+
+* Given a set of clusters centersμ1, μ2, …,μk, instead of directly assign all data points to their closest clusters, we can assign them partially (probabilistically) based on the distances
+* This can be done by:
+  – assuming a probabilistic distribution (model) for each cluster
+  – compute the *probability that each point belongs to each cluster*
+  – Often referred to as *Model-based clustering*
+
+
+If we know what points belong to cluster i,we can estimate the gaussian parameters easily:
+cluster prior, mean and covariance
+
+Model based approaches assume a variety of data models and apply maximum likelihood estimation and Bayes criteria to identify the most likely model and number of clusters. Specifically, the Mclust( ) function in the mclust package selects the optimal model according to BIC for EM initialized by hierarchical clustering for parameterized Gaussian mixture models. (phew!). *One chooses the model and number of clusters with the largest BIC*. See help(mclustModelNames) to details on the model chosen as best.
+
+
+
+Under this approach, a statistical model consisting of a finite mixture of
+Gaussian distributions is fit to the data (Fraley and Raftery, 2001). Each
+mixture component represents a cluster, and the mixture components and
+group memberships are estimated using maximum likelihood (EM algorithm).
+The function Mclust() in package mclust implements model based
+clustering.
+
+````{r, cache=TRUE}
+# Model Based Clustering
+library(mclust)
+fit <- Mclust(mydata)
+fit <- mclustBIC(mydata)
+
+#fit <- Mclust(newdata)
+plot(fit) #plot results 
+summary(fit) # display the best model
+````
+
+En estadística, el **criterio de información bayesiano (BIC) **o el más general criterio de Schwarz (SBC también, SBIC) es un criterio para la selección de modelos entre un conjunto finito de modelos. Se basa, en parte, de la función de probabilidad y que está estrechamente relacionado con el Criterio de Información de Akaike (AIC).
+Cuando el ajuste de modelos, es posible aumentar la probabilidad mediante la adición de parámetros, pero si lo hace puede resultar en sobreajuste. Tanto el BIC y AIC resuelven este problema mediante la introducción de un término de penalización para el número de parámetros en el modelo, el término de penalización es mayor en el BIC que en el AIC.
+
+###Plotting Cluster Solutions
+
+It is always a good idea to look at the cluster results.
+
+````{r, cache=TRUE}
+# K-Means Clustering with 5 clusters
+fit <- kmeans(mydata, 5)
+
+# Cluster Plot against 1st 2 principal components
+
+# vary parameters for most readable graph
+library(cluster) 
+clusplot(mydata, fit$cluster, color=TRUE, shade=TRUE, 
+    labels=2, lines=0)
+
+# Centroid Plot against 1st 2 discriminant functions
+library(fpc)
+plotcluster(mydata, fit$cluster)
+
+
+
+### k 3
+fit3 <- kmeans(mydata, 3)
+
+# Cluster Plot against 1st 2 principal components
+
+# vary parameters for most readable graph
+library(cluster) 
+clusplot(mydata, fit3$cluster, color=TRUE, shade=TRUE, 
+    labels=2, lines=0)
+
+# Centroid Plot against 1st 2 discriminant functions
+library(fpc)
+plotcluster(mydata, fit3$cluster)
+
+
+
+### k 7
+fit10 <- kmeans(mydata, 10)
+
+# Cluster Plot against 1st 2 principal components
+
+# vary parameters for most readable graph
+library(cluster) 
+clusplot(mydata, fit10$cluster, color=TRUE, shade=TRUE, 
+    labels=2, lines=0)
+
+# Centroid Plot against 1st 2 discriminant functions
+library(fpc)
+plotcluster(mydata, fit10$cluster)
+````
+
+
+
+###Validating cluster solutions
+
+The function **cluster.stats()** in the fpc package provides a mechanism for comparing the similarity of two cluster solutions using a variety of validation criteria (Hubert's gamma coefficient, the Dunn index and the corrected rand index)
+
+
+Metrics that compute a number of distance based statistics, which can be used for cluster validation, comparison between clusterings and decision about the number of clusters: cluster sizes, cluster diameters,
+average distances within and between clusters, cluster separation, biggest within cluster gap, average silhouette widths, the Calinski and Harabasz index, a Pearson version of Hubert’s gamma
+coefficient, the Dunn index and two indexes to assess the similarity of two clusterings, namely the
+corrected Rand index and Meila’s VI.
+
+
+````{r, cache=TRUE}
+# comparing 2 cluster solutions
+library(fpc)
+cluster.stats(d, fit10$cluster, fit3$cluster)
+
+cluster.stats(d,fit$cluster) 
+````
+
+where d is a distance matrix among objects, and fit1$cluster and fit$cluster are integer vectors containing classification results from two different clusterings of the same data.
+
+
+
+The **R package clValid ** contains functions for validating the results
+of a clustering analysis. There are three main types of cluster validation
+measures available, “internal”, “stability”, and “biological”. 
+
+https://cran.r-project.org/web/packages/clValid/vignettes/clValid.pdf
+
+````{r, cache=TRUE}
+library(clValid)
+intern <- clValid(head(mydata,100), 2:15, clMethods=c("hierarchical","kmeans"), validation="internal")
+
+summary(intern)
+plot(intern)
+`````
+

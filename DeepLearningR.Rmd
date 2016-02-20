@@ -1,0 +1,277 @@
+DEEP LEARNING
+========================
+
+
+Tutorials H2o:
+
+http://blog.dominodatalab.com/deep-learning-with-h2o-ai/
+
+
+**Data Kaggle competitions**:
+
+Who is more influential in social networks: https://www.kaggle.com/c/predict-who-is-more-influential-in-a-social-network/data
+
+Tutorial: http://thinktostart.com/predict-social-network-influence-with-r-and-h2o-ensemble-learning/
+
+
+
+
+`````{r, cache=TRUE}
+
+
+
+# Using H2O to Predict Soil Properties
+# 
+# In this section, I will explain how I use R and H2O to train predictive models for the Kaggle competition. In short, we have to develop regression models based on 1158 rows of training data and then use the models to predict five soil properties Ca, P, pH, SOC and Sand for each of the 728 test records. For more information, please go to the description page on Kaggle.
+
+#install.packages("h2o")  
+# 
+# ## Specify H2O version here
+# h2o_ver <- "1511"
+# 
+# ## Install H2O
+# local({r <- getOption("repos"); r["CRAN"] <- "http://cran.us.r-  
+#        project.org"; options(repos = r)})
+# txt_repo <- (c(paste0(paste0("http://s3.amazonaws.com/h2o-  
+#                              release/h2o/master/", h2o_ver),"/R"), getOption("repos")))
+# install.packages("h2o", repos = txt_repo, quiet = TRUE)  
+
+# Finally, let's run a demo to see H2O at work.
+#demo(h2o.glm)
+
+
+######
+
+
+library(h2o)  
+localH2O <- h2o.init(max_mem_size = '1g')  
+
+
+#  Import Data
+# 
+# Importing data is one of the things I like most about H2O!!! You can load compressed files (.zip, .gz) directly into the H2O cluster. This may not be significantly important for the small Kaggle dataset in this tutorial but it is certainly useful for bigger datasets.
+
+train_hex <- h2o.importFile(localH2O, "./Desktop/Ana/Scripts_machinelearning_statistics/DeepLearning/data/train_africa_soil.zip")  
+test_hex <- h2o.importFile(localH2O, "./Desktop/Ana/Scripts_machinelearning_statistics/DeepLearning/data/test_africa_soil.zip")  
+
+
+
+# 
+# 
+# Train Deep Neural Networks Models and Make Predictions
+# 
+# Without further ado, here is the starter code to train one deep neural networks model for each target variable and then use the models to make predictions. There are quite a few variables to tweak in the h2o.deeplearning(...) function. To keep things simple, I only provide the barebone code to get you started. For more information, I strongly recommend going through the vignette and demo code.
+
+## Split the dataset into 80:20 for training and validation
+train_hex_split <- h2o.splitFrame(train_hex, ratios = 0.8, shuffle = TRUE)
+
+## One Variable at at Time
+ls_label <- c("Ca", "P", "pH", "SOC", "Sand")
+ls_label <- c("Sand")
+
+for (n_label in 1:5) {
+
+  ## Display
+  cat("\n\nNow training a DNN model for", ls_label[n_label], "...\n")
+
+  ## Train a 50-node, three-hidden-layer Deep Neural Networks for 100 epochs
+  model <- h2o.deeplearning(x = 2:3595,
+                            y = (3595 + n_label),
+                            data = train_hex_split[[1]],
+                            validation = train_hex_split[[2]],
+                            activation = "Rectifier",
+                            hidden = c(50, 50, 50),
+                            epochs = 100,
+                            classification = FALSE,
+                            balance_classes = FALSE)
+
+  ## Print the Model Summary
+  print(model)
+
+  pred <- h2o.predict(model, test_hex)
+  
+  ## Use the model for prediction and store the results in submission template
+  #raw_sub[, (n_label + 1)] <- as.matrix(h2o.predict(model, test_hex))
+
+  
+  #pred.show()  
+  #performance = model.model_performance(prostate)  
+  #performance.show()  
+  ## Converting H2O format into data frame
+  df_yhat_test <- as.data.frame(pred)
+}
+# 
+#pred <- predict.h2o.ensemble(model, test_hex)
+# labels <- as.data.frame(validation_frame[,c(y)])[,1]
+# # Ensemble test AUC
+# AUC(predictions=as.data.frame(pred$pred)[,1], labels=labels)
+
+
+#install.packages("cvAUC")
+#labels <- as.data.frame(test_hex[,-1])
+# Ensemble test AUC
+#AUC(predictions=as.data.frame(pred$predict)[,1], labels=labels)
+
+
+`````
+
+
+Africa Soil properties: https://www.kaggle.com/c/afsis-soil-properties/forums/t/10568/ensemble-deep-learning-from-r-with-h2o-starter-kit
+
+Tutorial: http://blog.dominodatalab.com/using-r-h2o-and-domino-for-a-kaggle-competition/
+
+
+````{r, cache=TRUE, eval=FALSE, echo=TRUE}
+
+# 
+# Get the data
+# 
+# The data we will use to train our machine learning model is from a Kaggle competition from the year 2013. The challenge was organized by Data Science London and the UK Windows Azure Users Group who partnered with Microsoft and Peerindex.
+# 
+# The data was described as: “The dataset, provided by Peerindex, comprises a standard, pair-wise preference learning task. Each datapoint describes two individuals, A and B. For each person, 11 pre-computed, non-negative numeric features based on twitter activity (such as volume of interactions, number of followers, etc) are provided.
+# 
+# The binary label represents a human judgement about which one of the two individuals is more influential. A label ‘1’ means A is more influential than B. 0 means B is more influential than A. The goal of the challenge is to train a machine learning model which, for pairs of individuals, predicts the human judgement on who is more influential with high accuracy. Labels for the dataset have been collected by PeerIndex using an application similar to the one described in this post.”
+# 
+# 
+# Theory to build the ensemble model
+# 
+# With the h2oEnsemble package we can create ensembles with all available machine learning models in H2O. As the package authors explain: “This type of ensemble learning is called “super learning”, “stacked regression” or “stacking.” The Super Learner algorithm learns the optimal combination of the base learner fits.”
+# 
+# This is based on the article “Super Learner” published in the magazine “Statistical Applications in Genetics and Molecular Biology” by Mark J. van der Laan, Eric C Polley and Alan E. Hubbard from the University of California, Berkeley in 2007. They also created the “SuperLearner” package based on that: SuperLearner
+
+
+
+
+#install.packages(c("h2o","SuperLearner","cvAUC"))
+
+require(devtools)
+ 
+#install_github("h2oai/h2o-3/h2o-r/ensemble/h2oEnsemble-package")
+#install_github("h2oai/h2o-2/R/ensemble/h2oEnsemble-package")
+ 
+
+# 
+require(c("h2o","h2oEnsemble", "SuperLearner", "cvAUC"))
+  
+library("h2o")
+library("h2oEnsemble")
+library("SuperLearner")
+library("cvAUC")
+
+# Preparing the data
+# 
+# First we have to load the dataset with
+
+
+dat<-read.csv("./Desktop/Ana/Scripts_machinelearning_statistics/DeepLearning/data/train_influence_socialnetworks.csv", header=TRUE)
+
+#and split it into a train and a test data set. The test dataset provided by the Kaggle challenge does not include output labels so we can not use it to test our machine learning model.
+
+#We split it by creating a train index that chooses 4000 line numbers from the data frame. We then subset itnto train and test:
+
+
+train_idx <- sample(1:nrow(dat),4000,replace=FALSE)
+train <- dat[train_idx,] # select all these rows
+test <- dat[-train_idx,] # select all but these rows
+
+
+
+#Preparing the ensemble model
+#We begin with starting an h2o instance directly out of our R console
+
+
+localH2O = h2o.init()
+
+# After starting the H2O instance, we have to transform our data set a little bit further. We have to transform it into H2O data objects, define the output column and set the family variable to binomial as we want to do a binomial classification.
+# 
+# That is also the reason why we have to turn the output columns into factor variables.
+# 
+
+
+training_frame <- as.h2o(localH2O, train)
+validation_frame <- as.h2o(localH2O, test)
+y <- "Choice"
+x <- setdiff(names(training_frame), y)
+family <- "binomial"
+training_frame[,c(y)] <- as.factor(training_frame[,c(y)]) #Force Binary classification
+validation_frame[,c(y)] <- as.factor(validation_frame[,c(y)]) # check to validate that this guarantees th
+
+
+
+#Then we can define the machine learning methods we want to include in our ensemble and set the meta learner from the SuperLearner package. in this case we will use a general linear model.
+
+
+# Specify the base learner library & the metalearner
+learner <- c("h2o.glm.wrapper", "h2o.randomForest.wrapper", 
+"h2o.gbm.wrapper", "h2o.deeplearning.wrapper")
+metalearner <- "SL.glm"
+
+
+### NOT RUNNING!!!!!
+
+#Build the model to predict Social Network Influence
+
+#After defining all the parameters we can build our model.
+
+fit <- h2o.ensemble(x = x, y = y, 
+training_frame, 
+family = "binomial",
+prior = 1,
+learner, 
+metalearner,
+cvControl = list(V = 5))
+
+# Evaluate the performance
+# 
+# Evaluating the performance of a H2O model is pretty easy. But as the ensemble method is not fully implemented in the H2O package yet, we have to create a small workaround to get the accuracy of our model.
+
+
+pred <- predict.h2o.ensemble(fit, validation_frame)
+labels <- as.data.frame(validation_frame[,c(y)])[,1]
+# Ensemble test AUC
+AUC(predictions=as.data.frame(pred$pred)[,1], labels=labels)
+
+pred <- predict.h2o.ensemble(fit, validation_frame)
+labels <- as.data.frame(validation_frame[,c(y)])[,1]
+# Ensemble test AUC
+AUC(predictions=as.data.frame(pred$pred)[,1], labels=labels)
+#In my case the Accuracy was nearly 88%, which is a pretty good result.
+
+#You can also look at the accuracy of the the single models you used in your ensemble:
+
+L <- length(learner)
+ sapply(seq(L), function(l) AUC(predictions = as.data.frame(pred$basepred)[,l], labels = labels)) 
+
+
+```
+
+
+
+`````{r}
+
+## BOLTZMAN MACHINES
+#http://stats.stackexchange.com/questions/41771/r-libraries-for-deep-learning
+
+set.seed(10)
+print('Data from: https://github.com/echen/restricted-boltzmann-machines')
+Alice <- c('Harry_Potter' = 1, Avatar = 1, 'LOTR3' = 1, Gladiator = 0, Titanic = 0, Glitter = 0) #Big SF/fantasy fan.
+Bob <- c('Harry_Potter' = 1, Avatar = 0, 'LOTR3' = 1, Gladiator = 0, Titanic = 0, Glitter = 0) #SF/fantasy fan, but doesn't like Avatar.
+Carol <- c('Harry_Potter' = 1, Avatar = 1, 'LOTR3' = 1, Gladiator = 0, Titanic = 0, Glitter = 0) #Big SF/fantasy fan.
+David <- c('Harry_Potter' = 0, Avatar = 0, 'LOTR3' = 1, Gladiator = 1, Titanic = 1, Glitter = 0) #Big Oscar winners fan.
+Eric <- c('Harry_Potter' = 0, Avatar = 0, 'LOTR3' = 1, Gladiator = 1, Titanic = 0, Glitter = 0) #Oscar winners fan, except for Titanic.
+Fred <- c('Harry_Potter' = 0, Avatar = 0, 'LOTR3' = 1, Gladiator = 1, Titanic = 1, Glitter = 0) #Big Oscar winners fan.
+dat <- rbind(Alice, Bob, Carol, David, Eric, Fred)
+
+devtools:::install_github('zachmayer/rbm')
+library(rbm)
+
+
+#Fit a PCA model and an RBM model
+PCA <- prcomp(dat, retx=TRUE)
+RBM <- rbm(dat, retx=TRUE, num_hidden=2)
+
+
+#Examine the 2 models
+round(PCA$rotation, 2) #PCA weights
+    round(RBM$rotation, 2) #RBM weights
+```

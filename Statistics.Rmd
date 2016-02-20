@@ -1,0 +1,213 @@
+Basic Statistics
+========================
+
+http://www.statmethods.net/stats/
+
+
+###Importante:
+
+NULL HYPOTHESIS : no difference, equal
+ALTERNATIVE HYPOTHESIS: difference
+
+The p-value is a number between 0 and 1 and interpreted in the following way:
+
+* A small p-value (typically ≤ 0.05) indicates strong evidence **against the null hypothesis**, so you reject the null hypothesis.
+
+* A large p-value (> 0.05) indicates weak evidence against the **null hypothesis**, so you fail to reject the null hypothesis.
+
+p-values very close to the cutoff (0.05) are considered to be marginal (could go either way). Always report the p-value so your readers can draw their own conclusions.
+
+### Descriptive statistics
+
+Summary metrics: **mean, sd, var, min, max, median, range, and quantile**
+
+
+```{r, cache=TRUE}
+
+#    Data
+#mydata <- mtcars
+mydata <- USArrests
+#mydata <- faithful
+
+# get means for variables in data frame mydata
+# excluding missing values 
+sapply(mydata, mean, na.rm=TRUE)
+
+
+
+# mean,median,25th and 75th quartiles,min,max
+summary(mydata)
+
+##Escalera de transformación de potencias de Tukey (ver terminología)
+## Se utiliza mucho para corregir outliers arriba o abajo.
+
+# Tukey min,lower-hinge, median,upper-hinge,max
+fivenum(mydata$vs)
+`````
+
+**Summary Statistics by Group**
+
+A simple way of generating summary statistics by grouping variable is available in the psych package.
+
+```{r, cache=TRUE}
+
+library(psych)
+#describeBy(mydata, mydata$UrbanPop)
+
+`````
+
+
+### Frequency and contingency tables
+
+Tabla de contingencia
+En estadística las tablas de contingencia se emplean para registrar y analizar la asociación entre dos o más variables, habitualmente de naturaleza cualitativa (nominales u ordinales)
+Supónga que se dispone de dos variables, la primera el genero(hombre o mujer) y la segunda recoge si el individuo es zurdo o diestro. Se ha observado esta pareja de variables en una muestra aleatoria de 100 individuos. 
+Porcentajes (matrix de lo que hay de cada)
+
+
+```{r, cache=TRUE}
+## FRECUENCIA
+
+# 2-Way Frequency Table 
+mytable <- table(mydata) # A will be rows, B will be columns 
+#mytable # print table 
+
+margin.table(mytable, 1) # A frequencies (summed over B) 
+margin.table(mytable, 2) # B frequencies (summed over A)
+
+#prop.table(mytable) # cell percentages
+#prop.table(mytable, 1) # row percentages 
+#prop.table(mytable, 2) # column percentages
+
+
+## CONTINGENCIA : Cross tab 
+
+# 3-Way Frequency Table
+mytable <- xtabs(~., data=mydata)
+#ftable(mytable) # print table 
+summary(mytable) # chi-square test of indepedence
+
+library(gmodels)
+CrossTable(mytable)
+
+````
+
+
+### Tests of Independence
+ 
+#### Chi-Square Test
+For 2-way tables you can use chisq.test(mytable) to test independence of the row and column variable. By default, the p-value is calculated from the asymptotic chi-squared distribution of the test statistic. Optionally, the p-value can be derived via Monte Carlo simultation.
+
+http://enelcueto.blogspot.com.es/2013/04/test-de-asociacionindependencia-o-de.html
+
+Las pruebas de asociación (o independencia) sirven para determinar si existe una relación entre dos (o más variables). Existen numerosas pruebas estadísticas de asociación (por ejemplo: Chi-cuadrado de Pearson, Chi-cuadrado de Yates, Chi-cuadrado de la razón de verosimilitud, prueba exacta de Fisher, r de Pearson, rho de Spearman, etc.), aunque por ahora nos centraremos en las pruebas Chi-cuadrado y la asociación entre variables categóricas.
+
+Para evaluar si dos variables categóricas están asociadas (relacionadas) es necesario comprobar si la distribución de los valores de una variable difiere en función de los valores de la otra. Para ello, debemos partir de las siguientes hipótesis estadísticas:
+
+Hipótesis nula, Ho: No existe relación entre las variables (los resultados de las categorías de una variable no se ven afectados o influenciados por las categorías de la segunda variable).
+Hipótesis alterna, Ha: Existe asociación o relación entre las variables.
+Si se acepta la hipótesis nula (p>0.05) significa que ambas distribuciones se encuentran no asociadas (son independientes).
+
+
+
+#### Fisher Exact Test
+fisher.test(x) provides an exact test of independence. x is a two dimensional contingency table in matrix form.
+
+#### Mantel-Haenszel test
+Use the mantelhaen.test(x) function to perform a Cochran-Mantel-Haenszel chi-squared test of the null hypothesis that two nominal variables are conditionally independent in each stratum, assuming that there is no three-way interaction. x is a 3 dimensional contingency table, where the last dimension refers to the strata.
+
+#### Loglinear Models
+You can use the loglm( ) function in the MASS package to produce log-linear models. For example, let's assume we have a 3-way contingency table based on variables A, B, and C.
+
+`````{r, cache=TRUE}
+library(MASS)
+# mytable <- xtabs(~., data=mydata)
+# 
+# #We can perform the following tests:
+# #Mutual Independence: A, B, and C are pairwise independent.
+# loglm(~., mytable)
+# 
+# #Partial Independence: A is partially independent of B and C (i.e., A is independent of the composite variable BC).
+# loglin(~A+B+C+B*C, mytable)
+# 
+# #Conditional Independence: A is independent of B, given C.
+# loglm(~A+B+C+A*C+B*C, mytable)
+# 
+# #No Three-Way Interaction
+# loglm(~A+B+C+A*B+A*C+B*C, mytable)
+# 
+# Martin Theus and Stephan Lauer have written an excellent article on Visualizing Loglinear Models, using mosaic plots. There is also great tutorial example by Kevin Quinn on analyzing loglinear models via glm.
+
+`````
+
+
+### Measures of Association
+The assocstats(mytable) function in the vcd package calculates the **phi coefficient**, **contingency coefficient**, and **Cramer's V** for an rxc table. The kappa(mytable) function in the vcd package calculates Cohen's **kappa and weighted kappa for a confusion matrix**. See Richard Darlington's article on Measures of Association in Crosstab Tables for an excellent review of these statistics.
+
+### Correlations and covariances
+`````{r, cache=TRUE}
+
+# Correlations/covariances among numeric variables in 
+# data frame mtcars. Use listwise deletion of missing data. 
+cor(mtcars, use="complete.obs", method="kendall") 
+cov(mtcars, use="complete.obs")
+````
+
+
+### T-tests
+One of the most common tests in statistics is the t-test, used to determine whether the means of two groups are equal to each other. The assumption for the test is that both groups are sampled from normal distributions with equal variances. The null hypothesis is that the two means are equal, and the alternative is that they are not. It is known that under the null hypothesis, we can calculate a t-statistic that will follow a t-distribution with n1 + n2 - 2 degrees of freedom. There is also a widely used modification of the t-test, known as Welch's t-test that adjusts the number of degrees of freedom when the variances are thought not to be equal to each other. Before we can explore the test much further, we need to find an easy way to calculate the t-statistic.
+
+http://statistics.berkeley.edu/computing/r-t-tests
+
+```{r, cache=TRUE}
+
+#t.test( dateset1, dataset2) 
+#var.test( dateset1, dataset2)
+
+
+
+#   Welch Two Sample t-test
+# 
+# data:  dt.prices$conecta and dt.prices$all
+# t = 9.1637, df = 18629.78, p-value < 2.2e-16
+# alternative hypothesis: true difference in means is not equal to 0
+# 95 percent confidence interval:
+#  13666.48 21103.73
+# sample estimates:
+# mean of x mean of y 
+#  202324.0  184938.9 
+
+####Conclusion: pvalue es tan pequeño que se confirma la hipotesis nula. No hay gran diferencia entre estos dos datasets
+````
+
+
+
+### ANOVA - analysis of variance
+
+The analysis of variance is a commonly used method to determine differences between several samples. R provides a function to conduct ANOVA so: aov(model, data)
+
+http://www.gardenersown.co.uk/education/lectures/r/anova.htm
+
+1. Fit the model
+```{r, cache=TRUE}
+
+fit1 <- aov(Murder ~ UrbanPop, data=mydata)
+fit1
+fit2 <- aov(Murder ~ Rape, data=mydata)
+fit2
+
+summary(fit1)
+summary(fit2)
+
+# Tukey es cuando hay factores para ver combinatorias, aqui no
+
+#TukeyHSD(fit)
+```
+
+Model comparison
+
+````{r,cache=TRUE}
+
+
+anova(fit1, fit2) 
+````

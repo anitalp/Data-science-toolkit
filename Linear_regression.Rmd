@@ -1,0 +1,599 @@
+Linear Regression
+========================
+
+###Importante:
+
+#####Tipos de linear regression:
+
+* Parametric:
+
+  - Ordinary least squared (la t?pica)
+  - Regularization linear regression, penalized:
+    - Ridge (L2)
+    - Lasso (L1)
+    - Elastic net (L1,L2)
+  - Robust linear regressi?n
+  
+* Non-parametric (no esta fijo a una funci?n lineal)
+  - K-nearest neighbord
+  
+
+#####CONCEPTOS clave:
+
+* u : valor real
+* û : valor predicho
+* u_: media de u
+* Residuos: diferencia entre las puntuaciones observadas (puntos, û) y los prognósticos obtenidos en la recta (u)
+* R: correlación de Pearson, cuanto más alto mejor.
+* R^2: indica la correlación entre la variable dependiente y la independiente. Cuanto más algo más correlación, mejor.
+
+
+````{r}
+#  R_cuadrado = 1 - Suma de los cuadrados de los residuos / Suma de los cuadrados total 
+#             = 1 - RSS/ TSS
+#             = 1 - Σ(u-û)^2 (predicho) / Σ(u-u_)^2 (media)
+````
+
+#####ERRORES
+Al contrario que los indicadores anteriores, que cuanto más altos mejor, los siguientes errores cuanto más bajos mejor.
+
+* RMSE (root-mean-square deviation (RMSD) or root-mean-square error (RMSE)) :  raiz cuadrada ( Σ(û-u)^2 / n )
+promedio de los errores al cuadrado, es decir, la diferencia entre el estimador y lo que se estima.
+
+
+* RSS (Residual sum of squares): Σ(u-û)^2 (predicho)
+Sumatorio de los residuos (direncia entre observado y predicho) al cuadrado.
+
+* RSE (Residual Standard Error):  positive square root of the mean square error
+ε, error inevitable asociado a la f(x) de regresión
+
+
+* TSS (Sum of squares (= total sum of squares): RSE + RSS = TSS
+
+The sum of squares represents a measure of variation or deviation from the mean. It is calculated as a summation of the squares of the differences from the mean. The calculation of the total sum of squares considers both the sum of squares from the factors and from randomness or error.
+
+http://support.minitab.com/en-us/minitab/17/topic-library/modeling-statistics/anova/anova-statistics/understanding-sums-of-squares/
+
+In statistical data analysis the total sum of squares (TSS or SST) is a quantity that appears as part of a standard way of presenting results of such analyses. It is defined as being the sum, over all observations, of the squared differences of each observation from the overall mean.[1]
+
+In statistical linear models, (particularly in standard regression models), the TSS is the sum of the squares of the difference of the dependent variable and its mean:
+
+For wide classes of linear models, the total sum of squares equals the explained sum of squares plus the residual sum of squares. For a proof of this in the multivariate OLS case, see partitioning in the general OLS model.
+
+In analysis of variance (ANOVA) the total sum of squares is the sum of the so-called "within-samples" sum of squares and "between-samples" sum of squares, i.e., partitioning of the sum of squares. In multivariate analysis of variance (MANOVA) the following equation applies[2]
+
+where T is the total sum of squares and products (SSP) matrix, W is the within-samples SSP matrix and B is the between-samples SSP matrix. Similar terminology may also be used in linear discriminant analysis, where W and B are respectively referred to as the within-groups and between-groups SSP matrics.[2]
+
+
+
+
+#####BIBLIOGRAFIA
+
+Comparing linear models:
+
+http://www.biecek.pl/WZUR2009/AgnieszkaProchenka2009.pdf
+
+http://www.analyticsvidhya.com/blog/2015/08/comprehensive-guide-regression/
+
+Ver apuntes Gio academia
+
+Evaluación del modelo: https://www.otexts.org/fpp/4/4
+
+#####LINEAR REGRESIÓN
+
+It is one of the most widely known modeling technique. Linear regression is usually among the first few topics which people pick while learning predictive modeling. In this technique, the dependent variable is continuous, independent variable(s) can be **continuous or discrete**, and nature of regression line is linear.
+
+Linear Regression establishes a relationship between **dependent variable (Y)** and one or more **independent variables (X)** using a best fit straight line (also known as regression line).
+
+It is represented by an **equation Y=a+b*X + e**, where :
+* a is intercept (cuanto aumenta la variable dependiente si sumo 1 unaidad de la independiente), 
+* b is slope of the line (la pendiente de la linea de regresi?n) and 
+* e is error term (error inevitable)
+
+This equation can be used to predict the value of target variable based on given predictor variable(s).
+
+
+The difference between simple linear regression and multiple linear regression is that, multiple linear regression has (>1) independent variables, whereas simple linear regression has only 1 independent variable.  Now, the question is "How do we obtain best fit line?".
+
+
+
+
+
+#####FÓRMULAS:
+
+
+â = valor a predecir, variable dependiente
+βo = intercept
+β1 = slope (pendiente)
+Xn =  variables observadas
+
+
+**Regresión lineal**:
+
+      â = βo + β1x1 + β2x2  ... βnxn 
+
+
+
+##### MÉTRICAS EVALUACIÓN 
+
+**Regresión lineal**:
+
+* **R cuadrado**: cuanto más grande más correlación. Dependiendo del dominio :
+    - Social: 50% niños pobres en Madrid, gays, mucho (con 30% es grande)
+    - Médico:  99% (no queremos que se muera nadie)
+    - Económico  60/70% (la economía reconvertida el 60% es muuuy bueno)
+    
+    
+Metric for evaluating the goodness of fit of your model. Higher is better with 1 being the best. Corresponds with the amount of variability in what you're predicting that is explained by the model. In this instance, ~21% of the cause for a child's height is due to the height their parent. 
+WARNING: While a high R-squared indicates good correlation, correlation does not always imply causation.
+    
+* **RMSE** (root-mean-square deviation (RMSD) or root-mean-square error (RMSE)) : raiz cuadrada(  Σ(û-u)^2 / n)  promedio de los errores al cuadrado, es decir, la diferencia entre el estimador y lo que se estima.
+    
+* Gráfico scatter plot + linea con diferencias entre el valor real y el predicho.    
+* t-statistics : t-student distribución normal cuando N es pequeña (linear)
+* f-statistics: fitcher (con chi cuadrado) (linear)  - lower pvalue + parameters OK
+If the model with more parameters (your model) doesn't perform better than the model with fewer parameters, the F-test will have a high p-value (probability NOT significant boost). If the model with more parameters is better than the model with fewer parameters, you will have a lower p-value.
+
+**Regresión logística**:
+
+* **Curva ROC** :  Receiver Operating Characteristic(ROC) summarizes the model’s performance by evaluating the trade offs between true positive rate (sensitivity) and false positive rate(1- specificity). For plotting ROC, it is advisable to assume p > 0.5 since we are more concerned about success rate. ROC summarizes the predictive power for all possible values of p > 0.5.  The area under curve (AUC), referred to as index of accuracy(A) or concordance index, is a perfect performance metric for ROC curve. Higher the area under curve, better the prediction power of the model. Below is a sample ROC curve. The ROC of a perfect predictive model has TP equals 1 and FP equals 0. This curve will touch the top left corner of the graph.
+
+Note: For model performance, you can also consider likelihood function. It is called so, because it selects the coefficient values which maximizes the likelihood of explaining the observed data. It indicates goodness of fit as its value approaches one, and a poor fit of the data as its value approaches zero.
+
+* **Null Deviance and Residual Deviance** – Null Deviance indicates the response predicted by a model with nothing but an intercept. Lower the value, better the model. Residual deviance indicates the response predicted by a model on adding independent variables. Lower the value, better the model.
+
+* **AIC (Akaike Information Criteria)** – The analogous of **adjusted R²** in logistic regression is AIC. AIC is the measure of fit which penalizes model for the number of model coefficients. Therefore, we always prefer model with **minimum AIC** value.
+
+* **Confusion Matrix** (falsos positivos, verdaderos positivos...)
+  It is nothing but a tabular representation of Actual vs Predicted values. This helps us to find the accuracy of the model and avoid overfitting. 
+* **Accuracy** of your model with:
+      (TRUE POSITIVE + TRUE NEGATIVES)  / (TRUE POSITIVE + TRUE NEGATIVES + FALSE POSITIVES + FALSE NEGATIVES)  = (TP + TN) / (TP + TN + FP + FN)
+* F1 SCORE: the harmonic mean of precision and sensitivity
+      F1 = 2TP (1TP + FP + FN)
+* Specificity ( true negative rate): measures the proportion of negatives that are correctly identified
+      TRUE NEGATIVE / NEGATIVE = TN (TN + FN)
+* Sensitivity (recall, true positive rate): measures the proportion of positives that are correctly identified  
+      TRUE POSITIVE/ POSITIVE = TP / (TP + FN)
+* Precision: positive predictive value
+      TP / (TP + FP)
+* Negative predictive value   
+      TN / (TN + FN)
+* -2LL
+* z-statistics : distribución normal cuando N es grande 
+* R cuadrado Cox Snell y Nagelherke
+
+
+Ambos: ANOVA con los errores, si el p-value = 0, hay correlación
+(RSE, RSS, TSS)
+
+
+
+
+##### EJECUCIÓN en R: ¿Le paso todas las variables al modelo o voy añadiendo poco a poco?
+
+* En regresión lineal, las variables se calculan acumulativamente en el modelo. Probar por separado: dependiente e independiente. Se van añadiendo variables poco a poco en el modelo. No se dan todas de golpe.
+
+
+PASOS REGRESIÓN LINEAL:
+
+1. Probarlas por separado (1er paso: dependiente y 1 independiente, y así sucesivamente probando variable independiente por variable independiente, una a una)
+
+2. Ranking de todas por R cuadrado, cuanto máyor, más correlación entre la variable dependiente y la indpendiente.
+
+3. Voy añadiendo las primeras del ranking . Si añado las 3 primeras y tengo el mismo R cuadrado que con 1 variable, algo ocurre entre las independientes: **problemas de multicolinearidad** (pintar tablas de contigencia y correlation matrix entre variables independientes, estudiar qué ocurre).
+
+
+* En regresión logística, las variables se calculan una a una, por tanto puedo darle en el primer paso todas las variables porque las va a calcular una a una sin repercusión en las otras.
+     
+   
+##### INTERPRETING RESULTS:
+
+1	Residuals	The residuals are the difference between the actual values of the variable you're predicting and predicted values from your regression--y - ŷ. For most regressions you want your residuals to look like a normal distribution when plotted. If our residuals are normally distributed, this indicates the mean of the difference between our predictions and the actual values is close to 0 (good) and that when we miss, we're missing both short and long of the actual value, and the likelihood of a miss being far from the actual value gets smaller as the distance from the actual value gets larger.
+Think of it like a dartboard. A good model is going to hit the bullseye some of the time (but not everytime). When it doesn't hit the bullseye, it's missing in all of the other buckets evenly (i.e. not just missing in the 16 bin) and it also misses closer to the bullseye as opposed to on the outer edges of the dartboard.
+
+2	Significance Stars	The stars are shorthand for significance levels, with the number of asterisks displayed according to the p-value computed. *** for high significance and * for low significance. In this case, *** indicates that it's unlikely that no relationship exists b/w heights of parents and heights of their children.
+
+3	Estimated Coeffecient	The estimated coefficient is the value of slope calculated by the regression. It might seem a little confusing that the Intercept also has a value, but just think of it as a slope that is always multiplied by 1. This number will obviously vary based on the magnitude of the variable you're inputting into the regression, but it's always good to spot check this number to make sure it seems reasonable.
+
+4	Standard Error of the Coefficient Estimate	Measure of the variability in the estimate for the coefficient. Lower means better but this number is relative to the value of the coefficient. As a rule of thumb, you'd like this value to be at least an order of magnitude less than the coefficient estimate.
+In our example, the std error or the parent variable is 0.04 which is 16x less than the estimate of the coefficient (or 1.6 orders of magnitude greater).
+
+5	t-value of the Coefficient Estimate	Score that measures whether or not the coefficient for this variable is meaningful for the model. You probably won't use this value itself, but know that it is used to calculate the p-value and the significance levels.
+
+6	Variable p-value	Probability the variable is NOT relevant. You want this number to be as small as possible. If the number is really small, R will display it in scientific notation. In or example 2e-16 means that the odds that parent is meaningless is about 1⁄5000000000000000
+
+7	Significance Legend	The more punctuation there is next to your variables, the better.
+Blank=bad, Dots=pretty good, Stars=good, More Stars=very good
+
+8	Residual Std Error / Degrees of Freedom	The Residual Std Error is just the standard deviation of your residuals. You'd like this number to be proportional to the quantiles of the residuals in #1. For a normal distribution, the 1st and 3rd quantiles should be 1.5 +/- the std error. 
+
+The Degrees of Freedom is the difference between the number of observations included in your training sample and the number of variables used in your model (intercept counts as a variable).
+
+9	R-squared	Metric for evaluating the goodness of fit of your model. Higher is better with 1 being the best. Corresponds with the amount of variability in what you're predicting that is explained by the model. In this instance, ~21% of the cause for a child's height is due to the height their parent. 
+WARNING: While a high R-squared indicates good correlation, correlation does not always imply causation.
+
+10	F-statistic & resulting p-value	Performs an F-test on the model. This takes the parameters of our model (in our case we only have 1) and compares it to a model that has fewer parameters. In theory the model with more parameters should fit better. If the model with more parameters (your model) doesn't perform better than the model with fewer parameters, the F-test will have a high p-value (probability NOT significant boost). If the model with more parameters is better than the model with fewer parameters, you will have a lower p-value.
+
+The DF, or degrees of freedom, pertains to how many variables are in the model. In our case there is one variable so there is one degree of freedom.
+   
+
+#0. Ordinary Least square Linear regression (la m?s com?n)
+
+
+This task can be easily accomplished by Least Square Method. It is the most common method used for fitting a regression line. It calculates the best-fit line for the observed data by **minimizing the sum of the squares of the vertical deviations from each data point to the line**. Because the deviations are first squared, when added, there is no cancelling out between positive and negative values.
+
+We can evaluate the model performance using the metric **R-square**: min(valor predicho - valor real) al cuadrado.
+
+**Important Points:**
+
+* There must be **linear relationship between independent and dependent variables**
+* Multiple regression suffers from multicollinearity, autocorrelation, heteroskedasticity.
+* Linear Regression is very sensitive to **Outliers**. It can terribly affect the regression line and eventually the forecasted values.
+* **Multicollinearity** can increase the variance of the coefficient estimates and make the estimates very sensitive to minor changes in the model. The result is that the coefficient estimates are unstable
+** In case of multiple independent variables, we can go with forward selection, backward elimination and step wise approach for selection of most significant independent variables.
+ 
+`````{r DATOS, cache=TRUE, error=TRUE, eval=TRUE}
+
+### BBVA DATA (datos sobre navegación cliente, intentamos estimar el número de paginas visitadas (num_pages) a través de otras variables continuas : plazos, importes, gastos, dias utimo acceso)
+
+# load data
+data <- read.csv("/Users/alaguna/Desktop/Ana/Scripts_machinelearning_statistics/DATO_juguete/dataset_navegacionweb_prestamo_10K.csv", header=TRUE)
+attach(data)
+
+
+### DATA PRE PROCESSING : convert factors to ingeters
+str(data)
+
+data$num_plazo <- as.integer(data$num_plazo)
+data$num_ingresos <- as.numeric(data$num_ingresos)
+data$num_importe <- as.integer(data$num_importe)
+data$num_gastos <- as.integer(data$num_gastos)
+data$num_dias_last_access <- as.integer(data$num_dias_last_access)
+
+
+
+`````
+
+``````{r,cache=TRUE, error=TRUE, eval=TRUE}
+
+
+
+library(caTools)
+
+set.seed(88)
+split <- sample.split(data, SplitRatio = 0.75)
+
+
+
+dresstrain <- subset(data, split == TRUE)
+dresstest <- subset(data, split == FALSE)
+
+
+########################## SIMPLE LINEAR REGRESSION  #####################
+
+# fit model
+fit <- lm(num_pages ~ num_ingresos, data=dresstrain)
+
+
+# summarize the fit
+summary(fit)
+
+library(caret)
+head(varImp(fit))
+
+#Coeficientes
+coeffs = coefficients(fit); coeffs
+
+
+###Coeficiente de determinación (R cuadrados)
+summary(fit)$r.squared 
+
+#Resultado prediccion
+head(predict(fit, dresstest, interval="confidence") )
+
+
+####Rstandard residuals
+fit.stdres = rstandard(fit)
+
+
+### Normal probability plof of residuals
+qqnorm(fit.stdres, 
+     ylab="Standardized Residuals", 
+     xlab="Normal Scores") 
+qqline(fit.stdres)
+
+
+
+````
+
+```{r REVISAR, cache=TRUE, eval=FALSE}
+
+#Residuals
+fit.res = resid(fit)
+mean(fit.res)
+#Plot the residual against the observed values of the variable waiting.
+plot(data$num_ingresos, fit.res, 
+     ylab="Residuals", xlab="num_ingresos") 
+
+abline(0, 0) 
+
+
+
+####Rstandard residuals
+
+fit.stdres = rstandard(fit)
+#plot the standardized residual against the observed values of the variable waiting.
+
+plot(data$num_ingresos, fit.stdres, 
+     ylab="Standardized Residuals", 
+     xlab="num_ingresos ") 
+abline(0, 0)   
+
+
+````
+
+
+
+````{r MULTI_NORMAL, cache=TRUE, eval=TRUE, error=TRUE}
+
+
+########################## MULTIPLE LINEAR REGRESSION  #####################
+
+fit1 <- lm(num_pages  ~ num_importe + num_ingresos + num_gastos + num_dias_last_access, data=dresstrain)
+
+
+
+# summarize the fit
+summary(fit1)
+
+library(caret)
+head(varImp(fit1))
+
+#Coeficientes
+coeffs = coefficients(fit); coeffs
+
+
+###Coeficiente de determinación (R cuadrados)
+summary(fit1)$r.squared 
+
+#Resultado prediccion
+head(predict(fit1, dresstest, interval="confidence") )
+
+
+
+####Rstandard residuals
+fit1.stdres = rstandard(fit1)
+
+### Normal probability plof of residuals
+qqnorm(fit1.stdres, 
+     ylab="Standardized Residuals", 
+     xlab="Normal Scores") 
+qqline(fit1.stdres)
+````
+
+````{r REVISAR2, cache=TRUE, eval=FALSE}
+#Residuals
+fit1.res = resid(fit1)
+mean(fit1.res)
+#Plot the residual against the observed values of the variable waiting.
+plot(data$num_plazo, fit1.res, 
+     ylab="Residuals", xlab="Plazos") 
+
+abline(0, 0) 
+
+
+plot(data$num_importe, fit1.res, 
+     ylab="Residuals", xlab="num_importe") 
+
+abline(0, 0) 
+
+plot(data$num_ingresos, fit1.res, 
+     ylab="Residuals", xlab="num_ingresos") 
+
+abline(0, 0) 
+
+
+
+plot(data$num_dias_last_access, fit1.res, 
+     ylab="Residuals", xlab="num_dias_last_access") 
+
+abline(0, 0) 
+
+
+
+
+
+
+
+####Rstandard residuals
+
+fit1.stdres = rstandard(fit1)
+#plot the standardized residual against the observed values of the variable waiting.
+
+plot(data$num_ingresos, fit1.stdres, 
+     ylab="Standardized Residuals", 
+     xlab="num_ingresos ") 
+abline(0, 0)   
+
+
+`````
+
+
+
+
+`````{r cache=TRUE, echo=FALSE}
+##### DATA SET
+
+mydata <- longley
+#The longley dataset describes 7 economic variables observed from 1947 to 1962 used to predict the number of people employed yearly.
+
+## Real data set BBVA DATA from Madiva, estimar precio vivienda con otras variables
+
+````
+
+
+#Regression regularization methods(Lasso, Ridge and ElasticNet) 
+
+They works well in case of **high dimensionality** and **multicollinearity** among the variables in the data set.
+
+
+
+#1. Ridge Regression
+
+Ridge Regression creates a linear regression model that is penalized with the **L2-norm** which is the **sum of the squared coefficients**. This has the effect of shrinking the coefficient values (and the complexity of the model) allowing some coefficients with minor contribution to the response to get close to zero.
+
+
+Ridge Regression is a technique used when the data suffers from **multicollinearity** ( independent variables are highly correlated). In multicollinearity, even though the least squares estimates (OLS) are unbiased, **their variances are large which deviates the observed value far from the true value**. By **adding a degree of bias** to the regression estimates, ridge regression reduces the standard errors.
+
+
+In a linear equation, prediction errors can be decomposed into two sub components. First is due to the **biased** and second is due to the **variance**. Prediction error can occur due to any one of these two or both components. 
+
+Here, we'll discuss about the **error caused due to variance**:
+
+"http://i2.wp.com/www.analyticsvidhya.com/wp-content/uploads/2015/08/Ridge2.png
+
+
+
+Ridge regression solves the multicollinearity problem through **shrinkage parameter lambda** 
+
+In this equation, we have two components. First one is **least square term** and other one is **lambda of the summation of (beta squared) where beta is the coefficient**. This is added to least square term in order to shrink the parameter to have a very low variance.
+
+
+###### Important Points:
+
+* The assumptions of this regression is same as least squared regression except normality is not to be assumed
+* It shrinks the value of coefficients but doesn't reaches zero, which suggests no feature selection feature
+* This is a regularization method and uses L2 regularization (sum of squared errors)
+* Multicollinearity
+
+ 
+
+`````{r, cache=TRUE}
+# load the package
+library(glmnet)
+
+# load data
+x <- as.matrix(mydata[,1:6])
+y <- as.matrix(mydata[,7])
+
+# fit model
+fit <- glmnet(x, y, family="gaussian", alpha=0, lambda=0.001)
+
+# summarize the fit
+summary(fit)
+
+# make predictions
+predictions <- predict(fit, x, type="link")
+
+# summarize accuracy
+rmse <- mean((y - predictions)^2)
+print(rmse)
+
+````
+
+
+
+#2. LASSO: Least Absolute Shrinkage and Selection Operator
+
+Least Absolute Shrinkage and Selection Operator (LASSO) creates a regression model that is penalized with the **L1-norm** which is the sum of the absolute coefficients. This has the effect of shrinking coefficient values (and the complexity of the model), allowing some with a minor affect to the response to become zero.
+
+Similar to Ridge Regression, Lasso (Least Absolute Shrinkage and Selection Operator) also penalizes the absolute size of the regression coefficients. In addition, it is capable of reducing the variability and improving the accuracy of linear regression models.  Look at the equation below:
+
+http://i2.wp.com/www.analyticsvidhya.com/wp-content/uploads/2015/08/Lasso.png
+
+Lasso regression differs from ridge regression in a way that it uses absolute values in the penalty function, instead of squares. This leads to penalizing (or equivalently constraining the sum of the absolute values of the estimates) values which causes some of the parameter estimates to turn out exactly zero. Larger the penalty applied, further the estimates get shrunk towards absolute zero. This results to variable selection out of given n variables.
+
+**Important Points:**
+
+* The assumptions of this regression is same as least squared regression except normality is not to be assumed
+* It shrinks coefficients to zero (exactly zero), which certainly **helps in feature selection**
+* This is a regularization method and uses **L1 regularization**
+* **It deals with multicollinearity**, if group of predictors are highly correlated, lasso picks only one of them and shrinks the others to zero
+
+`````{r}
+library(lars)
+
+# load data
+x <- as.matrix(mydata[,1:6])
+y <- as.matrix(mydata[,7])
+
+# fit model
+fit <- lars(x, y, type="lasso")
+# summarize the fit
+summary(fit)
+
+# select a step with a minimum error
+best_step <- fit$df[which.min(fit$RSS)]
+
+# make predictions
+predictions <- predict(fit, x, s=best_step, type="fit")$fit
+
+# summarize accuracy
+rmse <- mean((y - predictions)^2)
+print(rmse)
+`````
+
+
+#3. Elastic Net
+
+Elastic Net creates a regression model that is penalized with both the **L1-norm and L2-norm**. This has the effect of effectively shrinking coefficients (as in ridge regression) and setting some coefficients to zero (as in LASSO).
+
+http://i1.wp.com/www.analyticsvidhya.com/wp-content/uploads/2015/08/Elastic_Net.png
+
+ElasticNet is hybrid of Lasso and Ridge Regression techniques. It is trained with L1 and L2 prior as regularizer. Elastic-net is useful **when there are multiple features which are correlated**. Lasso is likely to pick one of these at random, while elastic-net is likely to pick both.
+
+
+A practical advantage of trading-off between Lasso and Ridge is that, it allows Elastic-Net to inherit some of Ridge's stability under rotation.
+
+**Important Points:**
+
+* It encourages group effect in case of highly correlated variables
+* There are no limitations on the number of selected variables
+* It can suffer with double shrinkage
+
+`````{r}
+
+library(glmnet)
+# load data
+
+x <- as.matrix(mydata[,1:6])
+y <- as.matrix(mydata[,7])
+
+# fit model
+fit <- glmnet(x, y, family="gaussian", alpha=0.5, lambda=0.001)
+
+# summarize the fit
+summary(fit)
+
+# make predictions
+predictions <- predict(fit, x, type="link")
+
+# summarize accuracy
+rmse <- mean((y - predictions)^2)
+print(rmse)
+````
+
+
+
+#Robust regression
+
+http://www.alastairsanderson.com/R/tutorials/robust-regression-in-R/
+
+Mainly used for outliers detection.
+
+
+
+
+
+### How to select the right regression model?
+
+Life is usually simple, when you know only one or two techniques. One of the training institutes I know of tells their students - if the outcome is continuous - apply linear regression. If it is binary - use logistic regression! However, higher the number of options available at our disposal, more difficult it becomes to choose the right one. A similar case happens with regression models.
+
+Within multiple types of regression models, it is important to choose the best suited technique based on type of independent and dependent variables, dimensionality in the data and other essential characteristics of the data. Below are the key factors that you should practice to select the right regression model:
+
+* Data exploration is an inevitable part of building predictive model. It should be you first step before selecting the right model like identify the relationship and impact of variables
+* To compare the goodness of fit for different models, we can analyse different metrics like statistical significance of parameters, R-square, Adjusted r-square, AIC, BIC and error term. Another one is the Mallow's Cp criterion. This essentially checks for possible bias in your model, by * comparing the model with all possible submodels (or a careful selection of them).
+* Cross-validation is the best way to evaluate models used for prediction. Here you divide your data set into two group (train and validate). A simple mean squared difference between the observed and predicted values give you a measure for the prediction accuracy.
+* If your data set has multiple confounding variables, you should not choose automatic model selection method because you do not want to put these in a model at the same time.
+* It'll also depend on your objective. It can occur that a less powerful model is easy to implement as compared to a highly statistically significant model.
+* Regression regularization methods(Lasso, Ridge and ElasticNet) works well in case of high dimensionality and multicollinearity among the variables in the data set.

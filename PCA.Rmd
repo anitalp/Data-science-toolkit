@@ -1,0 +1,341 @@
+PRINCIPAL COMPONENTS ANALYSIS (PCA)
+==================================
+
+####Importante:
+
+El **análisis de componentes principales** (PCA) es un análisis multivariante de métodos de interdependencia (ninguna variable depende de otra), que forma parte del **análisis factorial. **
+La diferencia con el análisis factorial (por ejemplo PCA) se halla en que el análisis de correspondencia (CA), se aplica a variables cualitativas, mientras que el análisis factorial (PCA), se aplica a variables cuantitativas.
+
+Para calcularlo necesitamos un conjunto de variables cuantitavivas:
+
+1. **Normalizamos** nuestras variables (media = 0 and stdev=1) 
+2. Calcularemos la matriz de correlaciones o covarianzas.
+3. Extraeremos los factores con **eigenvalues** o SVD
+4. Seleccionaremos el número de factores (ver apuntes para ver diferentes métodos: criterio de Kaiser, punto de inflexión, etc.)
+5. Rotamos los factores conservados
+6. Determinamos las variables más correlacionadas y bautizamos nuestras **variables latentes.**
+
+
+
+Este método se usa frecuentemente en técnicas de **dimensionality reduction** cuando tenemos una matriz con muchas variables en nuestra etapa de feature selection.
+
+```{r, cache=TRUE}
+
+
+# #### PRINCIPAL COMPONENTS ANALYSIS (PCA)
+# 
+# NUMERICAL DATA
+
+# Principal Component Analysis (PCA) is a multivariate technique that allows us to summarize 
+# the systematic patterns of variations in the data.
+# From a data analysis standpoint, PCA is used for studying one table of observations and variables
+# with the main idea of transforming the observed variables into a set of new variables, 
+# the principal components, which are uncorrelated and explain the variation in the data.
+# For this reason, PCA allows to reduce a "complex" data set to a lower dimension in order
+# to reveal the structures 
+# or the dominant types of variations in both the observations and the variables.
+# 
+# 
+# No matter what function you decide to use, the typical PCA results should consist of 
+# - a set of eigenvalues, 
+# - a table with the scores or Principal Components (PCs), 
+# - and a table of loadings (or correlations between variables and PCs). 
+
+# The eigenvalues provide information of the variability in the data. 
+# The scores provide information about the structure of the observations. 
+# The loadings (or correlations) allow you to get a sense of the relationships between variables, 
+# as well as their associations with the extracted PCs.
+
+
+#References:
+#  http://www.r-bloggers.com/computing-and-visualizing-pca-in-r/
+#  http://gastonsanchez.com/blog/how-to/2012/06/17/PCA-in-R.html
+#  https://tgmstat.wordpress.com/2013/11/28/computing-and-visualizing-pca-in-r/#ref1
+
+#Computing the Principal Components (PC)
+
+# I will use the classical iris dataset for the demonstration. 
+# The data contain four continuous variables which corresponds 
+# to physical measures of flowers and a categorical variable 
+# describing the flowers' species.
+
+
+# # Load data
+data(iris)
+head(iris, 3)
+
+
+# We will apply PCA to the four continuous variables and 
+# use the categorical variable to visualize the PCs later.
+# Notice that in the following code we apply a log transformation
+# to the continuous variables as suggested by [1] and 
+# set center and scale. equal to TRUE in the call to prcomp 
+# to standardize the variables prior to the application of PCA:
+#   
+
+# log transform 
+log.ir <- log(iris[, 1:4])
+ir.species <- iris[, 5]
+
+
+############ OPTION 1: PRCOMP
+
+# apply PCA - scale. = TRUE is highly 
+# advisable, but default is FALSE. 
+
+# The calculation is done by a singular value decomposition of the (centered and possibly scaled) 
+# data matrix, not by using eigen on the covariance matrix. This is generally the preferred 
+# method for numerical accuracy. The print method for these objects prints the results in a 
+# nice format and the plot method produces a scree plot.
+
+
+ir.pca <- prcomp(log.ir,
+                 center = TRUE,
+                 scale. = TRUE)
+
+ir.pca.non_scale <- prcomp(log.ir,
+                 center = FALSE,
+                 scale. = FALSE)
+
+
+### El output de essto contiene los eigenvalues/sdev y la matriz rotada.
+
+# sqrt of eigenvalues
+# $sdev
+# [1] 1.7124583 0.9523797 0.3647029 0.1656840
+# 
+# $rotation
+# PC1         PC2        PC3         PC4
+# Sepal.Length  0.5038236 -0.45499872  0.7088547  0.19147575
+# Sepal.Width  -0.3023682 -0.88914419 -0.3311628 -0.09125405
+# Petal.Length  0.5767881 -0.03378802 -0.2192793 -0.78618732
+# Petal.Width   0.5674952 -0.03545628 -0.5829003  0.58044745
+
+
+sygma <- eigen(cov(log.ir), symmetric= TRUE)
+
+# $values
+# [1] 1.314598414 0.019141453 0.018294581 0.002895452
+# 
+# $vectors
+# [,1]          [,2]       [,3]        [,4]
+# [1,]  0.10090019 -0.0008537483 -0.4891583  0.86633858
+# [2,] -0.05759298  0.5745110809 -0.7140592 -0.39590340
+# [3,]  0.50527032 -0.6870939247 -0.4269180 -0.30057416
+# [4,]  0.85510473  0.4447900940  0.2618865  0.04871476
+
+pca1.eigen.stats  <- data.frame(eigenvalue  =	sygma$values,	
+                                
+                                proportion	=	sygma$values/sum(sygma$values),
+                                
+                                cumulative	=	cumsum(sygma$values)/sum(sygma$values))
+
+## La primera explica el 97% de la variabilidad
+# eigenvalue  proportion cumulative
+# 1 1.314598414 0.970233526  0.9702335
+# 2 0.019141453 0.014127264  0.9843608
+# 3 0.018294581 0.013502234  0.9978630
+# 4 0.002895452 0.002136976  1.0000000
+
+
+#Since skewness and the magnitude of the variables influence the resulting PCs, it is good practice to apply skewness transformation, center and scale the variables prior to the application of PCA. In the example above, we applied a log transformation to the variables but we could have been more general and applied a Box and Cox transformation [2]. See at the end of this post how to perform all those transformations and then apply PCA with only one call to the preProcess function of the caret package.
+
+#Analyzing the results
+
+#The prcomp function returns an object of class prcomp, which have some methods available. 
+#The print method returns the standard deviation of each of the four PCs, and their rotation
+#(or loadings), which are the coefficients of the linear combinations of the continuous variables.
+
+print(ir.pca)
+plot(ir.pca)
+plot(ir.pca.non_scale)
+print(ir.pca.non_scale)
+
+# Standard deviations:
+#   [1] 1.7124583 0.9523797 0.3647029 0.1656840
+# 
+# Rotation:
+#   PC1         PC2        PC3         PC4
+# Sepal.Length  0.5038236 -0.45499872  0.7088547  0.19147575
+# Sepal.Width  -0.3023682 -0.88914419 -0.3311628 -0.09125405
+# Petal.Length  0.5767881 -0.03378802 -0.2192793 -0.78618732
+# Petal.Width   0.5674952 -0.03545628 -0.5829003  0.58044745
+
+
+#The plot method returns a plot of the variances (y-axis) associated with the PCs (x-axis). 
+#The Figure below is useful to decide how many PCs to retain for further analysis. 
+#In this simple case with only 4 PCs this is not a hard task and we can see 
+#that the first two PCs explain most of the variability in the data.
+
+# plot method
+plot(ir.pca, type = "l")
+plot(ir.pca.non_scale, type = "l")
+
+# 
+# The summary method describe the importance of the PCs. 
+##The first row describe again the standard deviation associated with each PC. 
+## The second row shows the proportion of the variance in the data explained 
+# by each component while 
+##the third row describe the cumulative proportion of
+# explained variance. We can see there that the first two PCs accounts for more than {95\%} 
+# of the variance of the data.
+
+# summary method
+summary(ir.pca)
+
+# Importance of components:
+#   PC1    PC2     PC3     PC4
+# Standard deviation     1.7125 0.9524 0.36470 0.16568
+# Proportion of Variance 0.7331 0.2268 0.03325 0.00686
+# Cumulative Proportion  0.7331 0.9599 0.99314 1.00000
+
+#PREDICT
+#We can use the predict function if we observe new data and want to predict 
+#their PCs values. Just for illustration pretend the last two rows of the iris data 
+#has just arrived and we want to see what is their PCs values:
+  
+
+# Predict PCs
+predict(ir.pca, 
+        newdata=tail(log.ir, 2))
+
+# PC1         PC2        PC3         PC4
+# 149 1.0809930 -1.01155751 -0.7082289 -0.06811063
+# 150 0.9712116 -0.06158655 -0.5008674 -0.12411524
+# 
+# The Figure below is a biplot generated by the function ggbiplot of the ggbiplot 
+# package available on github.
+# 
+
+
+library(devtools)
+install_github("ggbiplot", "vqv")
+
+library(ggbiplot)
+g <- ggbiplot(ir.pca, obs.scale = 1, var.scale = 1, 
+              groups = ir.species, ellipse = TRUE, 
+              circle = TRUE)
+g <- g + scale_color_discrete(name = '')
+g <- g + theme(legend.direction = 'horizontal', 
+               legend.position = 'top')
+print(g +  ggtitle("Escalado Y centrado"))
+
+
+
+
+g_nscale <- ggbiplot(ir.pca.non_scale, obs.scale = 1, var.scale = 1, 
+              groups = ir.species, ellipse = TRUE, 
+              circle = TRUE)
+g_nscale <- g_nscale + scale_color_discrete(name = '')
+g_nscale <- g_nscale + theme(legend.direction = 'horizontal', 
+               legend.position = 'top' )
+               
+print(g_nscale+ ggtitle("Sin escalar Y sin centrar"))
+# 
+# 
+# It projects the data on the first two PCs. Other PCs can be chosen through the argument 
+# choices of the function. It colors each point according to the flowers' species 
+# and draws a Normal contour line with ellipse.prob probability (default to {68\%}) for each group.
+# More info about ggbiplot can be obtained by the usual ?ggbiplot.
+# I think you will agree that the plot produced by ggbiplot is much 
+# better than the one produced by biplot(ir.pca) (Figure below).
+
+biplot(ir.pca)
+
+# 
+# I also like to plot each variables coefficients inside a unit circle to get insight 
+# on a possible interpretation for PCs. 
+# Figure 4 was generated by this code available on gist.
+
+
+require(ggplot2)
+
+theta <- seq(0,2*pi,length.out = 100)
+circle <- data.frame(x = cos(theta), y = sin(theta))
+p <- ggplot(circle,aes(x,y)) + geom_path()
+
+loadings <- data.frame(ir.pca$rotation, 
+                       .names = row.names(ir.pca$rotation))
+p + geom_text(data=loadings, 
+              mapping=aes(x = PC1, y = PC2, label = .names, colour = .names)) +
+  coord_fixed(ratio=1) +
+  labs(x = "PC1", y = "PC2")
+
+
+
+################# OPTION 2: PCA with FactoMineR
+# 
+# A highly recommended option, 
+# especially if you want more detailed results and assessing tools, 
+# is the PCA() function from the package "FactoMineR". It is by far the best PCA function in R 
+# and it comes with a number of parameters that allow you to tweak the analysis in a very nice way.
+
+# PCA with function PCA
+library(FactoMineR)
+
+# apply PCA
+pca3 = PCA(log.ir, graph = TRUE)
+
+# matrix with eigenvalues IRIS DATASET
+pca3$eig
+# 
+# eigenvalue percentage of variance cumulative percentage of variance
+# comp 1  2.9325135              73.312837                          73.31284
+# comp 2  0.9070271              22.675677                          95.98851
+# comp 3  0.1330082               3.325206                          99.31372
+# comp 4  0.0274512               0.686280                         100.00000
+# > 
+
+
+
+##        eigenvalue percentage of variance cumulative percentage of variance
+## comp 1     2.4802                 62.006                             62.01
+## comp 2     0.9898                 24.744                             86.75
+## comp 3     0.3566                  8.914                             95.66
+## comp 4     0.1734                  4.336                            100.00
+# correlations between variables and PCs
+pca3$var$coord
+##           Dim.1   Dim.2   Dim.3    Dim.4
+## Murder   0.8440 -0.4160  0.2038  0.27037
+## Assault  0.9184 -0.1870  0.1601 -0.30959
+## UrbanPop 0.4381  0.8683  0.2257  0.05575
+## Rape     0.8558  0.1665 -0.4883  0.03707
+# PCs (aka scores)
+head(pca3$ind$coord)
+##              Dim.1   Dim.2    Dim.3     Dim.4
+## Alabama     0.9856 -1.1334  0.44427  0.156267
+## Alaska      1.9501 -1.0732 -2.04000 -0.438583
+## Arizona     1.7632  0.7460 -0.05478 -0.834653
+## Arkansas   -0.1414 -1.1198 -0.11457 -0.182811
+## California  2.5240  1.5429 -0.59856 -0.341996
+## Colorado    1.5146  0.9876 -1.09501  0.001465
+
+
+
+
+
+
+###### CONCLUSION
+# 
+# En la opci?n 1 (prcomp), no usan eigenvalues si no SVD con la sdev.
+# En la opci?n 2 (PCA) se usan los eigen values.
+# Sin embargo, el resultado es el mismo. Ver en las referencias otras funciones en R
+
+##opcion 1
+summary(ir.pca)
+# Importance of components:
+#   PC1    PC2     PC3     PC4
+# Standard deviation     1.7125 0.9524 0.36470 0.16568
+# Proportion of Variance 0.7331 0.2268 0.03325 0.00686
+# Cumulative Proportion  0.7331 0.9599 0.99314 1.00000
+
+##opcion 2
+pca3$eig
+# eigenvalue percentage of variance cumulative percentage of variance
+# comp 1  2.9325135              73.312837                          73.31284
+# comp 2  0.9070271              22.675677                          95.98851
+# comp 3  0.1330082               3.325206                          99.31372
+# comp 4  0.0274512               0.686280                         100.00000
+
+
+```

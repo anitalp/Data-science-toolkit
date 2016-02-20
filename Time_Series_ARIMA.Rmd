@@ -1,0 +1,689 @@
+Time Series: ARIMA
+========================
+
+
+pending: evaluation!!!!!!!
+
+###Importante:
+
+**Objetivo:**
+
+Prognosticar el futuro observando un comportamiento histórico temporal.
+Necesario más de 50 observaciones.
+Box & Jenkins pretenden eliminar efectos que no sean propios de la serie para realizar una predicción real del comportamiento de los datos en el tiempo.
+
+**Tipos** de series temporales:
+
+* Estacionarias (media = varianza, es constante) Ruido blanco, constante
+* No estacionaria (media no es igual a varianza) La mayoría son no estacionarias
+
+* de Tendencia
+* cíclica se repiten sin depender de factores como el clima
+* Estacional: cambian según la estación del año
+* Heteroscedasticidad: diferente varianza
+
+**Smoothing time series**
+
+Para quitar tendencia, estacionalidad, etc. y poder entender como se comparta la serie obviando esos factores: 
+
+ * Reducción de diferencia entre varianzas con logarítmo o exponencial.
+ * Promedio móvil (reducción de varianza). Sumatorio de n valores más recientes de datos / n
+ * Promedio móvil ponderado
+ En ambos últimos casos, cuando más grande es N más se suaviza la tendencia. (Ver apuntes Gio y mi cuaderno)
+ 
+
+**Modelos**
+
+
+####ARIMA: Etapas Box-Jenkins Model Identification
+
+1. Stationarity and Seasonality : 
+
+The first step in developing a Box-Jenkins model is to determine if the series is stationary and if there is any significant seasonality that needs to be modeled.
+
+2. Detecting stationarity	:
+
+Stationarity can be assessed from a run sequence plot. The run sequence plot should show constant location and scale. It can also be detected from an autocorrelation plot. Specifically, non-stationarity is often indicated by an autocorrelation plot with very slow decay.
+
+3. Detecting seasonality :
+Seasonality (or periodicity) can usually be assessed from an autocorrelation plot, a seasonal subseries plot, or a spectral plot.
+
+4. Differencing to achieve stationarity	:
+
+Box and Jenkins recommend the differencing approach to achieve stationarity. However, fitting a curve and subtracting the fitted values from the original data can also be used in the context of Box-Jenkins models.
+Seasonal differencing	At the model identification stage, our goal is to detect seasonality, if it exists, and to identify the order for the seasonal autoregressive and seasonal moving average terms. For many series, the period is known and a single seasonality term is sufficient. For example, for monthly data we would typically include either a seasonal AR 12 term or a seasonal MA 12 term. For Box-Jenkins models, we do not explicitly remove seasonality before fitting the model. Instead, we include the order of the seasonal terms in the model specification to the ARIMA estimation software. However, it may be helpful to apply a seasonal difference to the data and regenerate the autocorrelation and partial autocorrelation plots. This may help in the model idenfitication of the non-seasonal component of the model. In some cases, the seasonal differencing may remove most or all of the seasonality effect.
+
+5. Identify p and q:
+
+Once stationarity and seasonality have been addressed, the next step is to identify the order (i.e., the p and q) of the autoregressive and moving average terms.
+
+6. Autocorrelation and Partial Autocorrelation Plots:
+
+The primary tools for doing this are the autocorrelation plot and the partial autocorrelation plot. The sample autocorrelation plot and the sample partial autocorrelation plot are compared to the theoretical behavior of these plots when the order is known.
+
+
+7. Order of Autoregressive Process (p):
+
+Specifically, for an AR(1) process, the sample autocorrelation function should have an exponentially decreasing appearance. However, higher-order AR processes are often a mixture of exponentially decreasing and damped sinusoidal components.
+For higher-order autoregressive processes, the sample autocorrelation needs to be supplemented with a partial autocorrelation plot. The partial autocorrelation of an AR(p) process becomes zero at lag p+1 and greater, so we examine the sample partial autocorrelation function to see if there is evidence of a departure from zero. This is usually determined by placing a 95 % confidence interval on the sample partial autocorrelation plot (most software programs that generate sample autocorrelation plots will also plot this confidence interval). If the software program does not generate the confidence band, it is approximately ±2/N‾‾√, with N denoting the sample size.
+
+8. Order of Moving Average Process (q):
+
+The autocorrelation function of a MA(q) process becomes zero at lag q+1 and greater, so we examine the sample autocorrelation function to see where it essentially becomes zero. We do this by placing the 95 % confidence interval for the sample autocorrelation function on the sample autocorrelation plot. Most software that can generate the autocorrelation plot can also generate this confidence interval.
+The sample partial autocorrelation function is generally not helpful for identifying the order of the moving average process.
+
+9. Shape of Autocorrelation Function:
+
+The following table summarizes how we use the sample autocorrelation function for model identification.
+
+#####ARIMA: identifying the appropriate ARIMA model (p, q values) by looking at ACF/PACFs
+
+
+AR: palos significations en PARTIAL ACP
+MA: palos significativos en ACP
+
+http://stats.stackexchange.com/questions/83322/arima-model-identification
+
+1) A pure AR(p) will have a cut off at lag p in the PACF and ACF will be sinoudial.
+AR: Palos significativos en PACF indica que es AR y p = el número de palos de ACF.
+
+2) A pure MA(q) will have a cut off at lag q in the ACF.
+MA: Palos significativos en ACF indica que es MA y p = el número de palos de PACF.
+
+3) ARMA(p,q) will (eventually) have a decay in both; you often can't immediately tell p and q immediately from empirical ACF and PACF though with some practice you can get better at it.
+
+*Mixed models difficult to identify*
+About the ACF and PACF of ARMA(p,q) one can say: ACF tails off after lag (q-p) and PACF tails off after lag (p-q) [e.g. Wei (2005), S. 109], which makes it difficult to identify the orders p and q. Usually one uses the information criteria like the AIC, BIC, FPE, .... One estimates severeal models with difference.
+
+In practice, the sample autocorrelation and partial autocorrelation functions are random variables and will not give the same picture as the theoretical functions. This makes the model identification more difficult. In particular, mixed models can be particularly difficult to identify.
+Although experience is helpful, developing good models using these sample plots can involve much trial and error. For this reason, in recent years information-based criteria such as FPE (Final Prediction Error) and AIC (Akaike Information Criterion) and others have been preferred and used. These techniques can help automate the model identification process. These techniques require computer software to use. Fortunately, these techniques are available in many commerical statistical software programs that provide ARIMA modeling capabilities.
+
+
+
+
+**Shape of Autocorrelation Function** : The following table summarizes how we use the sample autocorrelation function for model identification. 
+
+http://www.itl.nist.gov/div898/handbook/pmc/section4/pmc446.htm
+
+**SHAPE : INDICATED MODEL**
+
+* (AR) Exponential, decaying to zero:	Autoregressive model. Use the partial autocorrelation plot to identify the order of the autoregressive model.
+* (AR) Alternating positive and negative (sinusodial), decaying to zero:	Autoregressive model. Use the partial autocorrelation plot to help identify the order.
+* (MA) One or more spikes, rest are essentially zero:	Moving average model, order identified by where plot becomes zero.
+* (ARMA) Decay, starting after a few lags:	Mixed autoregressive and moving average model.
+* All zero or close to zero: 	Data is essentially random.
+* High values at fixed intervals: 	Include seasonal autoregressive term.
+* No decay to zero:	Series is not stationary.
+ 
+
+
+**Examples identifying ARIMA model (p,q) with ACF, PACF**
+
+http://www.itl.nist.gov/div898/handbook/pmc/section4/pmc446.htm
+https://onlinecourses.science.psu.edu/stat510/?q=book/export/html/49
+
+
+######Evaluation: Ljung-Box test
+
+La prueba de Ljung-Box (llamada así por Greta M. Ljung y George E. P. Box) es un tipo de prueba estadística de si cualquiera de un grupo de autocorrelaciones de una serie de tiempo son diferentes de cero. En lugar de probar la aleatoriedad en cada desfase distinto, que pone a prueba la aleatoriedad "en general" sobre la base de un número de retardos, y por lo tanto es una Prueba de Portmanteau.
+
+Esta prueba algunas veces se conoce como la prueba de Ljung-Box Q, y está estrechamente relacionada con la prueba de Box-Pierce (que lleva el nombre de George E. P. Box y David A. Pierce). De hecho, la estadística de prueba Ljung-Box fue descrito de manera explícita en el periódico que dio lugar a la utilización de la estadística de Box-Pierce,1 2 y de la que esa estadística toma su nombre. La estadística de prueba de Box-Pierce es una versión simplificada de la estadística de Ljung-Box para los cuales los estudios de simulación posteriores han demostrado un rendimiento deficiente.
+
+La prueba de Ljung-Box se aplica ampliamente en la econometría y otras aplicaciones de análisis de series temporales.
+La prueba de Ljung-Box se puede definir de la siguiente manera.
+H0: Los datos se distribuyen de forma independiente (es decir, las correlaciones en la población de la que se toma la muestra son 0, de modo que cualquier correlación observada en los datos es el resultado de la aleatoriedad del proceso de muestreo).
+Ha: Los datos no se distribuyen de forma independiente.
+
+**Bibliografía**: 
+
+http://a-little-book-of-r-for-time-series.readthedocs.org/en/latest/src/timeseries.html
+
+Muy bueno: https://www.otexts.org/fpp/8/7
+
+Gráficos AR vs MA : http://www.elsevier.es/en-revista-medicina-clinica-2-articulo-prevision-evolucion-un-paciente-13057547
+
+AR: palos significations en PARTIAL ACP
+MA: palos significativos en ACP
+
+Resumen bueno: http://www.statoek.wiso.uni-goettingen.de/veranstaltungen/zeitreihen/sommer03/ts_r_intro.pdf
+
+
+````{r, cache=TRUE, eval=TRUE}
+
+### ALTAS clientes BBVA 2015
+
+data <- read.csv("/Users/alaguna/Desktop/Ana/Scripts_machinelearning_statistics/DATO_juguete/altas_EneroOctubre2015_merged.csv", sep= ";", header=TRUE)
+
+
+attach(data)
+
+library(sqldf)
+data_agrupada <- sqldf("select Fecha, count(*)  as x from data group by Fecha")
+
+ts_data <- ts(data_agrupada$x)
+
+
+
+##### CONTRATACIONES OCL 2013 2014 y 2015
+
+data <- read.csv("/Users/alaguna/Desktop/Ana/Scripts_machinelearning_statistics/DATO_juguete/contrataciones_ocl_forescasting.csv", sep= ",", header=TRUE)
+
+names(data) <- c("Fecha" ,"tipo",  "n_ocl")
+
+data_agrupada <- sqldf("select Fecha, n_ocl  as x from data where tipo = 'WEB'")
+
+ts_data <- ts(data_agrupada$x)
+
+`````
+
+#####SMOOTHING : Decomposing Time Series
+
+######Logaritmic smoothing
+
+````{r, cache=TRUE}
+
+kings <- scan("http://robjhyndman.com/tsdldata/misc/kings.dat",skip=3)
+kingstimeseries <- ts(kings)
+
+#LOG
+plot.ts(ts(log(kingstimeseries)))
+````
+
+
+######Moving average smooting
+
+````{r, cache=TRUE}
+##### Medias móviles
+###Non seasonal
+library("TTR")
+kingstimeseriesSMA3 <- SMA(kingstimeseries,n=3)
+plot.ts(kingstimeseriesSMA3)
+
+
+###Seasonal
+#decompose(ts(data_agrupada))
+````
+
+######Simple Exponential Smoothing
+
+````{r, cache=TRUE}
+
+
+#seriesforecast <- HoltWinters(ts(data_agrupada), beta=FALSE, gamma=FALSE)
+#seriesforecast$fitted
+#plot(seriesforecast)
+
+###
+#SAMPLE DATA
+
+rain <- scan("http://robjhyndman.com/tsdldata/hurst/precip1.dat",skip=1)
+rainseries <- ts(rain,start=c(1813))
+plot.ts(rainseries)
+
+rainseriesforecasts <- HoltWinters(rainseries, beta=FALSE, gamma=FALSE)
+rainseriesforecasts
+rainseriesforecasts$fitted
+
+## mejor cuanto alpha más cercano a cero
+plot(rainseriesforecasts)
+rainseriesforecasts$SSE
+
+
+
+#As explained above, by default HoltWinters() just makes forecasts for the time period covered by the original data, which is 1813-1912 for the rainfall time series. We can make forecasts for further time points by using the “forecast.HoltWinters()” function in the R “forecast” package. 
+
+library("forecast")
+rainseriesforecasts2 <- forecast.HoltWinters(rainseriesforecasts, h=8)
+rainseriesforecasts2
+
+````
+
+###### Stationary vs Non-stationary
+
+**Stationarity and differencing**
+
+A stationary time series is one whose properties do not depend on the time at which the series is observed.1 So time series with trends, or with seasonality, are not stationary — the trend and seasonality will affect the value of the time series at different times. On the other hand, a white noise series is stationary — it does not matter when you observe it, it should look much the same at any period of time.
+
+Some cases can be confusing — a time series with cyclic behaviour (but not trend or seasonality) is stationary. That is because the cycles are not of fixed length, so before we observe the series we cannot be sure where the peaks and troughs of the cycles will be.
+
+In general, a stationary time series will have no predictable patterns in the long-term. Time plots will show the series to be roughly horizontal (although some cyclic behaviour is possible) with constant variance.
+
+**La mayoría son no estacionarias**
+
+Compute the differences between consecutive observations. This is known as differencing.
+
+Transformations such as logarithms can help to stabilize the variance of a time series. Differencing can help stabilize the mean of a time series by removing changes in the level of a time series, and so eliminating trend and seasonality.
+
+
+
+######Unit root tests
+One way to determine more objectively if differencing is required is to use a unit root test. These are statistical hypothesis tests of stationarity that are designed for determining whether differencing is required.
+
+A number of unit root tests are available, and they are based on different assumptions and may lead to conflicting answers. One of the most popular tests is the Augmented Dickey-Fuller (ADF) test.
+
+
+The null-hypothesis for an ADF test is that the data are non-stationary. So **large p-values are indicative of non-stationarity**, and small p-values suggest stationarity. Using the usual 5% threshold, differencing is required if the p-value is greater than 0.05.
+
+`````{r}
+
+library(tseries)
+
+plot(rainseries)
+plot(diff(log(rainseries),12), xlab="Year")
+plot(ts_data)
+plot(diff(log(ts_data),12), xlab="Year")
+
+
+adf.test(rainseries, alternative = "stationary")
+adf.test(ts_data, alternative = "stationary")
+
+
+````
+
+
+Another popular unit root test is the Kwiatkowski-Phillips-Schmidt-Shin (KPSS) test. This reverses the hypotheses, so the null-hypothesis is that the data are stationary. In this case, small p-values (e.g., less than 0.05) suggest that differencing is required.
+
+`````{r}
+kpss.test(ts_data)
+kpss.test(rainseries)
+
+````
+
+
+A useful R function is ndiffs() which uses these tests to determine the appropriate number of first differences required for a non-seasonal time series.
+
+``````{r, error=TRUE}
+nsdiffs(ts_data)
+nsdiffs(rainseries)
+
+```````
+
+##### ARIMA Models
+
+ARIMA(p,d,q): p correlation; d integration; q medias móviles
+
+Exponential smoothing methods are useful for making forecasts, and make no assumptions about the correlations between successive values of the time series. However, if you want to make prediction intervals for forecasts made using exponential smoothing methods, the prediction intervals require that the forecast errors are uncorrelated and are normally distributed with mean zero and constant variance.
+
+While exponential smoothing methods do not make any assumptions about correlations between successive values of the time series, in some cases you can make a better predictive model by taking correlations in the data into account. **Autoregressive Integrated Moving Average (ARIMA)** models include an explicit statistical model for the irregular component of a time series, that allows for non-zero autocorrelations in the irregular component.
+
+###### Selecting a Candidate ARIMA Model
+If your time series is stationary, or if you have transformed it to a stationary time series by differencing d times, the next step is to select the appropriate ARIMA model, which means finding the values of most appropriate values of p and q for an ARIMA(p,d,q) model. To do this, you usually need to examine the correlogram and partial correlogram of the stationary time series.
+
+````{r}
+
+#Example of the Ages at Death of the Kings of England
+
+plot(kingstimeseries)
+
+kingtimeseriesdiff1 <- diff(kingstimeseries, differences=1)
+plot.ts(kingtimeseriesdiff1)
+
+#For example, to plot the correlogram for lags 1-20 of the once differenced time series of the ages at death of the kings of England, and to get the values of the autocorrelations, we type:
+
+acf(kingtimeseriesdiff1, lag.max=20)             # plot a correlogram
+pacf(kingtimeseriesdiff1, lag.max=20)             # plot a correlogram
+
+#We see from the correlogram that the autocorrelation at lag 1 (-0.360) exceeds the significance bounds, but all other autocorrelations between lags 1-20 do not exceed the significance bounds.
+
+
+````
+
+
+
+######Forecasting Using an ARIMA Model
+
+Once you have selected the best candidate ARIMA(p,d,q) model for your time series data, you can estimate the parameters of that ARIMA model, and use that as a predictive model for making forecasts for future values of your time series.
+
+You can estimate the parameters of an ARIMA(p,d,q) model using the “arima()” function in R.
+
+````{r,cache=TRUE}
+# Example of the Ages at Death of the Kings of England
+# 
+# For example, we discussed above that an ARIMA(0,1,1) model seems a plausible model for the ages at deaths of the kings of England. You can specify the values of p, d and q in the ARIMA model by using the “order” argument of the “arima()” function in R. To fit an ARIMA(p,d,q) model to this time series (which we stored in the variable “kingstimeseries”, see above), we type:
+
+kingstimeseriesarima <- arima(kingstimeseries, order=c(0,1,1)) # fit an ARIMA(0,1,1) model
+kingstimeseriesarima
+
+#if we are fitting an ARIMA(0,1,1) model to our time series, it means we are fitting an an ARMA(0,1) model to the time series of first differences. An ARMA(0,1) model can be written X_t - mu = Z_t - (theta * Z_t-1), where theta is a parameter to be estimated. From the output of the “arima()” R function (above), the estimated value of theta (given as ‘ma1’ in the R output) is -0.7218 in the case of the ARIMA(0,1,1) model fitted to the time series of ages at death of kings.
+
+library("forecast") # load the "forecast" R library
+kingstimeseriesforecasts <- forecast.Arima(kingstimeseriesarima, h=5)
+kingstimeseriesforecasts
+
+plot.forecast(kingstimeseriesforecasts)
+`````
+
+
+###### Correlogram of the forecast errors
+`````{r, cache=TRUE}
+
+#As in the case of exponential smoothing models, it is a good idea to investigate whether the forecast errors of an ARIMA model are normally distributed with mean zero and constant variance, and whether the are correlations between successive forecast errors.
+
+#For example, we can make a correlogram of the forecast errors for our ARIMA(0,1,1) model for the ages at death of kings, and perform the Ljung-Box test for lags 1-20, by typing:
+
+acf(kingstimeseriesforecasts$residuals, lag.max=20)
+Box.test(kingstimeseriesforecasts$residuals, lag=20, type="Ljung-Box")
+
+#Since the correlogram shows that none of the sample autocorrelations for lags 1-20 exceed the significance bounds, and the p-value for the Ljung-Box test is 0.9, we can conclude that there is very little evidence for non-zero autocorrelations in the forecast errors at lags 1-20.
+
+#To investigate whether the forecast errors are normally distributed with mean zero and constant variance, we can make a time plot and histogram (with overlaid normal curve) of the forecast errors:
+
+plot.ts(kingstimeseriesforecasts$residuals)            # make time plot of forecast errors
+
+
+
+plotForecastErrors <- function(forecasterrors)
+  {
+     # make a histogram of the forecast errors:
+     mybinsize <- IQR(forecasterrors)/4
+     mysd   <- sd(forecasterrors)
+     mymin  <- min(forecasterrors) - mysd*5
+     mymax  <- max(forecasterrors) + mysd*3
+     # generate normally distributed data with mean 0 and standard deviation mysd
+     mynorm <- rnorm(10000, mean=0, sd=mysd)
+     mymin2 <- min(mynorm)
+     mymax2 <- max(mynorm)
+     if (mymin2 < mymin) { mymin <- mymin2 }
+     if (mymax2 > mymax) { mymax <- mymax2 }
+     # make a red histogram of the forecast errors, with the normally distributed data overlaid:
+     mybins <- seq(mymin, mymax, mybinsize)
+     hist(forecasterrors, col="red", freq=FALSE, breaks=mybins)
+     # freq=FALSE ensures the area under the histogram = 1
+     # generate normally distributed data with mean 0 and standard deviation mysd
+     myhist <- hist(mynorm, plot=FALSE, breaks=mybins)
+     # plot the normal curve as a blue line on top of the histogram of forecast errors:
+     points(myhist$mids, myhist$density, type="l", col="blue", lwd=2)
+  }
+
+plotForecastErrors(kingstimeseriesforecasts$residuals) # make a histogram
+
+````
+
+
+
+Conclusions:
+
+
+The time plot of the in-sample forecast errors shows that the variance of the forecast errors seems to be roughly constant over time (though perhaps there is slightly higher variance for the second half of the time series). The histogram of the time series shows that the forecast errors are roughly normally distributed and the mean seems to be close to zero. Therefore, it is plausible that the forecast errors are normally distributed with mean zero and constant variance.
+
+Since successive forecast errors do not seem to be correlated, and the forecast errors seem to be normally distributed with mean zero and constant variance, the ARIMA(0,1,1) does seem to provide an adequate predictive model for the ages at death of English kings.
+
+
+------
+
+####BBVA DATA set (altas de clientes diarias de Enero a Octubre 2015  & forecasting contrataciones prestamos OCL historico 2015)
+
+#####Contrataciones OCL
+
+````{r, cache=TRUE, eval=TRUE}
+### ALTAS clientes BBVA 2015
+
+data1 <- read.csv("/Users/alaguna/Desktop/Ana/Scripts_machinelearning_statistics/DATO_juguete/altas_EneroOctubre2015_merged.csv", sep= ";", header=TRUE)
+
+
+attach(data1)
+
+library(sqldf)
+data_agrupada1 <- sqldf("select Fecha, count(*)  as x from data1 group by Fecha")
+
+ts_data1 <- ts(data_agrupada1$x)
+plot(ts_data1)
+
+
+##### CONTRATACIONES OCL 2013 2014 y 2015
+
+data <- read.csv("/Users/alaguna/Desktop/Ana/Scripts_machinelearning_statistics/DATO_juguete/contrataciones_ocl_forescasting.csv", sep= ",", header=TRUE)
+
+names(data) <- c("Fecha" ,"tipo",  "n_ocl")
+
+data_agrupada <- sqldf("select Fecha, n_ocl  as x from data where tipo = 'WEB'")
+
+ts_data <- ts(data_agrupada$x)
+
+plot(ts_data)
+
+###
+
+````
+
+--------
+
+````{r, cache=TRUE, eval=TRUE}
+
+#### DATA CONTRATACIONES OCL
+
+### SIMPLE COMPONENT ANALYSIS
+#### REGRESSION ANALYSIS
+
+#http://www.statoek.wiso.uni-goettingen.de/veranstaltungen/zeitreihen/sommer03/ts_r_intro.pdf
+
+
+diff1 <- diff(ts_data, differences=1)
+plot.ts(diff1)
+
+#diff_abs <- abs(ts_data)
+#plot.ts(diff_abs)
+
+lbeer<-log(ts_data)
+t<-seq(20131119,20151231,length=length(ts_data))
+t2<-t^2
+plot(lbeer)
+plot(ts_data)
+lm(lbeer~t+t2)
+lines(lm(lbeer~t+t2)$fit,col=2,lwd=2)
+
+summary(lm(lbeer~t+t2))
+
+
+lbeer1<-log(ts_data1)
+t<-seq(20131119,20151231,length=length(ts_data1))
+t2<-t^2
+plot(lbeer1)
+plot(ts_data1)
+lm(lbeer1~t+t2)
+lines(lm(lbeer1~t+t2)$fit,col=2,lwd=2)
+
+summary(lm(lbeer1~t+t2))
+
+### EXPONENCIAL SMOOTHING      investigar!!!!!
+
+#HoltWinters(ts_data1)
+#plot(ts_data)
+#lines(HoltWinters(ts_data)$fitted,col="red")
+
+
+
+
+### ARIMA
+#simulationa
+sim.ar<-arima.sim(list(ar=c(0.4,0.4)),n=1000)
+sim.ma<-arima.sim(list(ma=c(0.6,-0.4)),n=1000)
+par(mfrow=c(2,2))
+
+acf(sim.ar,main="ACF of AR(2) process")
+acf(sim.ma,main="ACF of MA(2) process")
+pacf(sim.ar,main="PACF of AR(2) process")
+pacf(sim.ma,main="PACF of MA(2) process")
+
+
+#own data
+par(mfrow=c(2,2))
+
+acf(ts_data, main="ACF ocl")
+pacf(ts_data ,main="PACF ocl")
+
+
+
+## AUTO vs estimation from ACF/PACF
+#Compare models with regard to statistics such as the MSE (the estimate of the variance of the wt), AIC, AICc, and SIC (also called BIC).  Lower values of these statistics are desirable.
+
+library(fma)
+library(forecast)
+
+model1 <- auto.arima(ts_data)
+model1
+summary(model1)
+arima(ts_data,order=c(1,1,6))
+plot(forecast(model1,10))
+
+model2 <- auto.arima(ts_data1)
+arima(ts_data1,order=c(1,1,1))
+plot(forecast(model2,10))
+
+#AICs are lower always in the auto.arima()
+
+
+
+###Compute the Box–Pierce or Ljung–Box test statistic for examining the null hypothesis of independence in a given time series. These are sometimes known as ‘portmanteau’ tests.
+#These tests are sometimes applied to the residuals from an ARMA(p, q) fit, in which case the references suggest a better approximation to the null-hypothesis distribution is obtained by setting fitdf = p+q, provided of course that lag > fitdf.
+
+
+
+fit<-arima(ts_data,order=c(5,1,2))
+tsdiag(fit)
+
+Box.test(fit$residuals,lag=1)  ## hay correlacion
+
+# cuanto mas pequeño más correlacion en la serie, si es 0.9 no hay correlacion, random
+#a small p-value is evidence against independence.
+#A p-value of 0.05 means that you have 5% chance to make an error if you reject the null hypothesis of no auto-correlation until order 1 in your case (5% de error de decir que hay correlacion)
+#is very little evidence for non-zero autocorrelations if 0.9
+
+
+#### FORECASTING
+par(mfrow=c(1,1))
+
+plot(ts_data)
+LH.pred<-predict(fit,n.ahead=5)
+lines(LH.pred$pred,col="red")
+lines(LH.pred$pred+2*LH.pred$se,col="red",lty=3)
+lines(LH.pred$pred-2*LH.pred$se,col="red",lty=3)
+
+LH.pred
+``````
+
+---------------
+
+
+#####Altas clientes 
+
+````{r, cache=TRUE, eval=TRUE}
+### ALTAS clientes BBVA 2015
+
+data <- read.csv("/Users/alaguna/Desktop/Ana/Scripts_machinelearning_statistics/DATO_juguete/altas_EneroOctubre2015_merged.csv", sep= ";", header=TRUE)
+
+
+attach(data)
+
+library(sqldf)
+data_agrupada <- sqldf("select Fecha, count(*)  as x from data group by Fecha")
+
+ts_data <- ts(data_agrupada$x)
+plot(ts_data)
+
+````
+
+````{r, cache=TRUE, eval=TRUE}
+
+#### DATA altas 
+
+### SIMPLE COMPONENT ANALYSIS
+#### REGRESSION ANALYSIS
+
+#http://www.statoek.wiso.uni-goettingen.de/veranstaltungen/zeitreihen/sommer03/ts_r_intro.pdf
+
+diff1 <- diff(ts_data, differences=1)
+plot.ts(diff1)
+
+lbeer<-log(ts_data)
+t<-seq(20131119,20151231,length=length(ts_data))
+t2<-t^2
+plot(lbeer)
+plot(ts_data)
+lm(lbeer~t+t2)
+lines(lm(lbeer~t+t2)$fit,col=2,lwd=2)
+
+summary(lm(lbeer~t+t2))
+
+
+lbeer<-log(ts_data1)
+t<-seq(20131119,20151231,length=length(ts_data1))
+t2<-t^2
+plot(lbeer)
+plot(ts_data1)
+lm(lbeer~t+t2)
+lines(lm(lbeer~t+t2)$fit,col=2,lwd=2)
+
+summary(lm(lbeer~t+t2))
+
+### EXPONENCIAL SMOOTHING      investigar!!!!!
+
+#HoltWinters(ts_data1)
+#plot(ts_data)
+#lines(HoltWinters(ts_data)$fitted,col="red")
+
+
+
+
+### ARIMA
+#simulationa
+sim.ar<-arima.sim(list(ar=c(0.4,0.4)),n=1000)
+sim.ma<-arima.sim(list(ma=c(0.6,-0.4)),n=1000)
+par(mfrow=c(2,2))
+
+acf(sim.ar,main="ACF of AR(2) process")
+acf(sim.ma,main="ACF of MA(2) process")
+pacf(sim.ar,main="PACF of AR(2) process")
+pacf(sim.ma,main="PACF of MA(2) process")
+
+
+#own data
+par(mfrow=c(2,2))
+
+acf(ts_data, main="ACF ocl")
+pacf(ts_data ,main="PACF ocl")
+
+
+
+## AUTO vs estimation from ACF/PACF
+#Compare models with regard to statistics such as the MSE (the estimate of the variance of the wt), AIC, AICc, and SIC (also called BIC).  Lower values of these statistics are desirable.
+
+model <- auto.arima(ts_data)
+model
+arima(ts_data,order=c(1,1,6))
+
+plot(forecast(model,10))
+
+
+#AICs are lower always in the auto.arima()
+
+
+
+###Compute the Box–Pierce or Ljung–Box test statistic for examining the null hypothesis of independence in a given time series. These are sometimes known as ‘portmanteau’ tests.
+#These tests are sometimes applied to the residuals from an ARMA(p, q) fit, in which case the references suggest a better approximation to the null-hypothesis distribution is obtained by setting fitdf = p+q, provided of course that lag > fitdf.
+
+
+
+fit<-arima(ts_data,order=c(5,1,2))
+tsdiag(fit)
+
+Box.test(fit$residuals,lag=1)  ## hay correlacion
+
+# cuanto mas pequeño más correlacion en la serie, si es 0.9 no hay correlacion, random
+#a small p-value is evidence against independence.
+#A p-value of 0.05 means that you have 5% chance to make an error if you reject the null hypothesis of no auto-correlation until order 1 in your case (5% de error de decir que hay correlacion)
+#is very little evidence for non-zero autocorrelations if 0.9
+
+
+#### FORECASTING
+par(mfrow=c(1,1))
+
+plot(ts_data)
+LH.pred<-predict(fit,n.ahead=5)
+lines(LH.pred$pred,col="red")
+lines(LH.pred$pred+2*LH.pred$se,col="red",lty=3)
+lines(LH.pred$pred-2*LH.pred$se,col="red",lty=3)
+
+LH.pred
+``````
+
