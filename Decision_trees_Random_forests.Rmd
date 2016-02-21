@@ -563,7 +563,9 @@ varImpPlot(adult.rf)
 
 ------------
 
+------------
 
+------------
 
 #### COMPARING TREE BASED METHODS: Decision trees, Random forests, Bagging & Boosting
 

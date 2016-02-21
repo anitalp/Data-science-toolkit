@@ -1,0 +1,213 @@
+Support Vector Machine
+========================
+
+In machine learning, support vector machines (SVMs, also support vector networks[1]) are supervised learning models with associated learning algorithms that analyze data used for classification and regression analysis. Given a set of training examples, each marked for belonging to one of two categories, an SVM training algorithm builds a model that assigns new examples into one category or the other, making it a non-probabilistic binary linear classifier. An SVM model is a representation of the examples as points in space, mapped so that the examples of the separate categories are divided by a clear gap that is as wide as possible. New examples are then mapped into that same space and predicted to belong to a category based on which side of the gap they fall on.
+
+In addition to performing linear classification, SVMs can efficiently perform a **non-linear classification** using what is called the **kernel trick**, implicitly mapping their inputs into **high-dimensional feature spaces**.
+
+When data are not labeled, a supervised learning is not possible, and an unsupervised learning is required, that would find natural clustering of the data to groups, and map new data to these formed groups. The **clustering algorithm which provides an improvement to the support vector machines is called support vector clustering**  and is highly used in industrial applications either when data is not labeled or when only some data is labeled as a preprocessing for a classification pass; the clustering method was published
+
+
+
+####Kernel method
+
+In machine learning, kernel methods are a class of algorithms for pattern analysis, whose best known member is the support vector machine (SVM). The general task of pattern analysis is to **find and study general types of relations (for example clusters, rankings, principal components, correlations, classifications) in datasets**. 
+
+For many algorithms that solve these tasks, the data in raw representation have to be explicitly transformed into feature vector representations via a user-specified feature map: in contrast, kernel methods require only a user-specified kernel, i.e., a similarity function over pairs of data points in raw representation.
+
+Kernel methods owe their name to the use of kernel functions, which enable them to operate in a high-dimensional, implicit feature space without ever computing the coordinates of the data in that space, but rather by simply computing the inner products between the images of all pairs of data in the feature space. This operation is often computationally cheaper than the explicit computation of the coordinates. This approach is called the "kernel trick". Kernel functions have been introduced for sequence data, graphs, text, images, as well as vectors.
+
+Algorithms capable of operating with kernels include the kernel perceptron, support vector machines (SVM), Gaussian processes, principal components analysis (PCA), canonical correlation analysis, ridge regression, spectral clustering, linear adaptive filters and many others. Any linear model can be turned into a non-linear model by applying the kernel trick to the model: replacing its features (predictors) by a kernel function.
+Most kernel algorithms are based on convex optimization or eigenproblems and are statistically well-founded. Typically, their statistical properties are analyzed using statistical learning theory (for example, using Rademacher complexity).
+
+##Important:
+- Non linear classification
+
+Tutorials
+
+http://www.louisaslett.com/Courses/Data_Mining/ST4003-Lab7-Introduction_to_Support_Vector_Machines.pdf
+
+
+Bibliografía:
+
+Ver libro Introduction to Statistical Learning (Lab page 365)
+
+``````{r svm, cache=TRUE}
+
+library("e1071")
+
+attach(iris)
+
+x <- subset(iris, select=-Species)
+y <- Species
+
+#TRAINING SVM
+
+#sintaxis 1
+svm_model <- svm(Species ~ ., data=iris)
+summary(svm_model)
+
+#sintaxis 2
+svm_model1 <- svm(x,y)
+summary(svm_model1)
+
+
+
+
+
+#PREDICTING SVM
+
+pred <- predict(svm_model1,x)
+system.time(pred <- predict(svm_model1,x))
+
+#CONFUSION MATRIX result of prediction, using command table to compare the result of SVM prediction and the class data in y variable.
+table(pred,y)
+
+
+`````
+
+
+##### TUNING THE MODEL
+
+In order to improve the performance of the support vector regression/machine we will need to select the best parameters for the model.
+
+In our previous example, we performed an epsilon-regression, we did not set any value for epsilon ( ϵϵ ), but it took a default value of 0.1.  There is also a cost parameter which we can change to avoid overfitting.
+
+The process of choosing these parameters is called hyperparameter optimization, or model selection.
+
+The standard way of doing it is by doing a grid search. It means we will train a lot of models for the different couples of ϵϵ and cost, and choose the best one.
+
+There is two important points in the code above:
+
+ - we use the tune method to train models with ϵ=0,0.1,0.2,...,1ϵ=0,0.1,0.2,...,1  and cost = 22,23,24,...,2922,23,24,...,29 which means it will train  88 models (it can take a long time)
+ - the tuneResult returns the MSE, don't forget to convert it to RMSE before comparing the value to our previous model (for support vector regression)
+
+``````{r svm TUNING, cache=TRUE, error=TRUE}
+
+#TUning SVM to find the best cost and gamma ..
+svm_tune <- tune(svm, train.x=x, train.y=y, 
+              kernel="radial", ranges=list(cost=10^(-1:2), gamma=c(.5,1,2)))
+
+print(svm_tune)
+
+## TRAINING AFTER TUNING with the results of cost and gammma from tune()
+
+svm_model_after_tune <- svm(Species ~ ., data=iris, kernel="radial", cost=1, gamma=0.5)
+summary(svm_model_after_tune)
+
+pred <- predict(svm_model_after_tune,x)
+system.time(predict(svm_model_after_tune,x))
+
+
+## EVALUATION
+
+#Get cost and gamma
+print(svm_tune)
+
+#On this graph we can see that the darker the region is the better our model is (because the RMSE is closer to zero in darker regions).
+plot(svm_tune)
+
+#confusion matrix
+table(pred,y)
+
+# Compute accuracy
+sum(pred==y)/length(y)
+
+# Compute at the prediction scores
+ypredscore = predict(svm_model_after_tune,x,type="decision")
+
+# Check that the predicted labels are the signs of the scores
+table(ypredscore > 0,y)
+
+
+plot(svm_model_after_tune, iris)
+
+# Package to compute ROC curve, precision-recall etc...
+ library(ROCR)
+ypredscore2 = predict(svm_model_after_tune,x,type="raw")
+
+pred <- prediction(ypredscore,y)
+# # Plot ROC curve
+# perf <- performance(pred, measure = "tpr", x.measure = "fpr")
+# plot(perf)
+# # Plot precision/recall curve
+# perf <- performance(pred, measure = "prec", x.measure = "rec")
+# plot(perf)
+# # Plot accuracy as function of threshold
+# perf <- performance(pred, measure = "acc")
+# plot(perf)
+####
+
+`````
+
+
+
+
+-------
+
+
+######BBVA DATAsets
+
+``````{r svm data real, cache=TRUE, eval=FALSE}
+
+library("e1071")
+
+
+data <- read.csv("/Users/alaguna/Desktop/Ana/Scripts_machinelearning_statistics/DATO_juguete/dataset_navegacionweb_prestamo_10K.csv", header=TRUE)
+attach(data)
+
+#variable <- num_pages
+
+library(caTools)
+
+set.seed(88)
+split <- sample.split(data, SplitRatio = 0.75)
+
+dresstrain <- subset(data, split == TRUE)
+dresstest <- subset(data, split == FALSE)
+
+
+x <- subset(data, select=c(des_last_touch_channel , ind_home , ind_contenido_put , ind_simulador_put , cod_finalidad))
+y <- ind_lead_put
+
+#TRAINING SVM
+
+#sintaxis 1
+svm_model <- svm(ind_lead_put ~ des_last_touch_channel + ind_home + ind_contenido_put + ind_simulador_put + cod_finalidad, data=dresstrain)
+summary(svm_model)
+
+
+#PREDICTING SVM
+
+pred <- predict(svm_model,dresstest)
+
+#CONFUSION MATRIX result of prediction, using command table to compare the result of SVM prediction and the class data in y variable.
+table(head(pred,100),head(dresstest$ind_lead_put,100))
+
+
+
+svm_tune <- tune(svm, train.x=dresstrain$ind_lead_put, train.y=y, 
+              kernel="radial", ranges=list(cost=10^(-1:2), gamma=c(.5,1,2)))
+
+print(svm_tune)
+
+## TRAINING AFTER TUNING with the results of cost and gammma from tune()
+
+svm_model_after_tune <- svm(Species ~ ., data=iris, kernel="radial", cost=1, gamma=0.5)
+summary(svm_model_after_tune)
+
+pred <- predict(svm_model_after_tune,x)
+system.time(predict(svm_model_after_tune,x))
+
+
+## EVALUATION
+
+#Get cost and gamma
+print(svm_tune)
+
+#On this graph we can see that the darker the region is the better our model is (because the RMSE is closer to zero in darker regions).
+plot(svm_tune)
+
+
+
+`````

@@ -1,0 +1,248 @@
+Survival analysis
+====================
+
+Bibliografía:
+
+http://www.mas.ncl.ac.uk/~nmf16/teaching/mas3311/practical1.html
+
+**Introduction**
+
+Survival analysis is a set of statistical methods for analyzing the occurrence of events over time. It is also used to determine the relationship of co-variates to the time-to-events, and accurately compare time-to-event between two or more groups. For example:
+
+* Time to death in biological systems.
+* Failure time in mechanical systems.
+* How long can we expect a user to be on a website / service?
+* Time to recovery for lung cancer treatment.
+
+
+The statistical term 'survival analysis' is analogous to 'reliability theory' in engineering, 'duration analysis' in economics, and 'event history analysis' in sociology.
+
+The **two key functions** in survival analysis are the survival function and the hazard function:
+
+* The **survival function**, conventionally denoted by SS, is **the probability that the event (say, death) has not occurred yet**:
+
+S(t)=Pr(T>t),
+
+where TT denotes the **time of death** and PrPr the probability. Since SS is a probability, 0≤S(t)≤10≤S(t)≤1. 
+
+Survival times are non-negative (T≥0T≥0) and, generally, S(0)=1S(0)=1.
+
+* The **hazard function** h(t)h(t) is the **event (death) rate at time tt**, conditional on survival until tt (i.e., T≥tT≥t):
+
+h(t)=limΔt→0Pr(t≤T≤t+Δt|T≥t)=limΔt→0Pr(t≤T≤t+Δt)S(t)=p(t)S(t),
+
+where pp denotes the probability density function.
+
+In practice, we do not get to observe the actual survival function of a population; we must use the observed data to estimate it. A popular estimate for the survival function S(t)S(t) is the Kaplan–Meier estimate:
+
+Ŝ (t)=∏ti≤tni−dini,
+
+S^(t)=∏ti≤tni−dini,
+
+where didi is the number of events (deaths) observed at time titi and nini is the number of subjects at risk observed at time titi.
+
+
+
+**Censoring**
+
+Censoring is a type of missing data problem common in survival analysis. Other popular comparison methods, such as linear regression and t-tests do not accommodate for censoring. This makes survival analysis attractive for data from randomized clinical studies.
+
+In an ideal scenario, both the birth and death rates of a patient is known, which means the lifetime is known.
+Right censoring occurs when the 'death' is unknown, but it is after some known date. e.g. The 'death' occurs after the end of the study, or there was no follow-up with the patient.
+Left censoring occurs when the lifetime is known to be less than a certain duration. e.g. Unknown time of initial infection exposure when first meeting with a patient.
+
+
+
+**Estimating survival with Kaplan-Meier**
+
+The simplest fit estimates a survival object against an intercept. However, the survfit() function has several optional arguments. For example, we can change the confidence interval using conf.int and conf.type.
+See help(survfit.formula) for the comprehensive documentation.
+
+`````{r, cache=TRUE}
+library(survival)
+library(KMsurv)
+
+#SMALL DATA SET
+my.times <-c(10,13,18,19,23,30,36,38,54,56,59,75,93,97,104,107,107,107)
+my.events <-c(1,0,0,1,0,1,1,0,0,0,1,1,1,1,0,1,0,0)
+my.surv <- Surv(my.times,my.events)
+my.surv
+
+my.KMest <- survfit(my.surv~1, conf.int=0.95)
+plot(my.KMest)
+summary(my.KMest)
+`````
+
+``````{r}
+
+## LUNG DATA
+
+head(lung)
+names(lung)
+
+#Sometimes we want to compare two or more different subgroups of a single data frame. For example, we might wan to compare the survivor functions for males and females in the lung data set. To do this, create a Surv object for the lung data:
+
+s <- Surv(lung$time, lung$status)
+
+#Then fit the KM estimate, telling R to split the data up according to the sex of each individual:
+lung.KM <- survfit(s~lung$sex)
+lung.KM<-survfit(s~sex,data=lung)
+
+plot(lung.KM)
+summary(lung.KM)
+
+`````
+
+
+
+
+
+
+
+``````{r, eval=FALSE}
+
+######## Nonparametric Estimation #########
+
+## We will revisit "survfit" R function introduced before and explore 
+## more function options. 
+
+#setwd('c:/work/teaching/math434/fall09')
+library(survival)
+library(KMsurv)
+bfeed=read.table("bfeeddata.txt",header=T) 
+bfeed
+## This is the breast feeding data.
+
+## Kaplan-Meier (PL) estimate, the standard error and 
+## log-log type of pointwise confidence interval.
+fit1=survfit(Surv(time,ind)~1,data=bfeed,conf.type='log-log')
+summary(fit1)
+## check the varibles listed in the survfit object. 
+attributes(fit1)
+
+## Plot the estimation without confidence interval.
+plot(fit1,conf.int=0)
+
+## Compare different type of confidence intervals.
+plot(fit1,xlab="Weeks",ylab="Survival Probability",main='Kaplan-Meier Estimate')
+fit2=survfit(Surv(time,ind)~1,data=bfeed,conf.type='plain')
+lines(c(0,fit2$time),c(1,fit2$lower),type='s',col=2,lty=2)
+lines(c(0,fit2$time),c(1,fit2$upper),type='s',col=2,lty=2)
+## Note that the default "log" transformation in R is different 
+## from the "log" transformation mentioned in the textbook. 
+## It is g(t)=log(t)
+fit3=survfit(Surv(time,ind)~1,data=bfeed,conf.type='log')
+lines(c(0,fit3$time),c(1,fit3$lower),type='s',col=3,lty=3)
+lines(c(0,fit3$time),c(1,fit3$upper),type='s',col=3,lty=3)
+legend(130,1,legend=c("'log-log' CI","'linear' CI","'log' CI"),col=1:3,lty=1:3)
+
+## All CIs are close to each other.
+
+## The "survfit" function in R does not produce confidence bands.
+## Here is a function to creat confidence bands.
+source('surv.cband.R')
+cband=surv.conf.bands(fit1,dim(bfeed)[1]) 
+3.1622
+## Now let's add the 95% EP log-log confidence band on the previous plot
+lines(c(0,cband$time),c(1,cband$lower),type='s',col=4,lty=4)
+lines(c(0,cband$time),c(1,cband$upper),type='s',col=4,lty=4)
+
+## Produce the Figure 4.5 in example 4.2 on page 112.
+data(bmt)
+## This is bone marrow transplant for Leukemia data .
+fit4=survfit(Surv(t2,d3)~1,data=bmt[bmt$group==1,],conf.type='plain')
+fit4ep=surv.conf.bands(fit4,sum(bmt$group==1),conf.type='plain',tL=100,tU=600) 
+2.8826
+fit4hall=surv.conf.bands(fit4,sum(bmt$group==1),conf.type='plain',type='hall',tL=100,tU=600) 
+1.3211
+plot(fit4,xlim=c(100,600),xlab='Days Post Transplant',
+  ylab='Estimated Survival Function',main="Reproducing Figure 4.5")
+lines(c(0,fit4ep$time),c(1,fit4ep$lower),type='s',col=3,lty=3)
+lines(c(0,fit4ep$time),c(1,fit4ep$upper),type='s',col=3,lty=3)
+lines(c(0,fit4hall$time),c(1,fit4hall$lower),type='s',col=4,lty=4)
+lines(c(0,fit4hall$time),c(1,fit4hall$upper),type='s',col=4,lty=4)
+legend(400,1,c('KM estimate','CI','EP band','Hall-Wellner band'),col=c(1,1,3,4),lty=1:4)
+
+
+## Another possible estimate is Fleming-Harrington estimate, 
+## which we will discuss more in detail in semiparametric models.
+fit5=survfit(Surv(time,ind)~1,data=bfeed,type='fh2',conf.type='plain')
+## or equivalently you may write as
+fit5=update(fit1,type='fh2',conf.type='plain')
+
+## Nelson-Alen estimator for cumulative hazard, the standard error and
+## linear type of pointwise confidence interval.
+Hhat=-log(fit4$surv)
+Htilde=cumsum(fit4$n.event/fit4$n.risk)
+plot(fit4$time,Hhat,type='s',
+	xlim=c(100,600),xlab='Days Post Transplant',
+	ylab='Estimated Cumulative Hazard Rate')
+lines(fit4$time,Htilde,type='s',lty=2,col=2)
+legend(100,1,c('KM estimate','NA estimate'),lty=1:2,col=1:2)
+
+## Median lifetime and its confidence interval could be found in the output directly.
+fit1
+fit4
+
+## Mean lifetime and its confidence interval.
+print(fit1,print.rmean=TRUE)
+print(fit4,print.rmean=TRUE)
+
+
+######## Nonparametric Tests #########
+
+## Two-sample comparison
+ 
+library(KMsurv)
+data(btrial)
+## This is the data in the Breast-Cancer Trial (Chap1.5)
+## Log-rank test
+survdiff(Surv(time,death)~im,data=btrial)
+## Peto-Peto modified Gehan-Wilcoxon test
+survdiff(Surv(time,death)~im,data=btrial,rho=1)
+
+## Check the R function
+survdiff
+
+## A traditional Wilcoxon Test: wilcox.test
+
+## Example 7.2 on page 209
+library(KMsurv)
+data(kidney)
+logrank=survdiff(Surv(time,delta)~type,data=kidney)
+logrank$var # variance-covariance matrix 
+
+## Could you write a R function to carry the traditional Gehan-Wilcoxon Test?
+
+
+## More-sample comparison
+## Exampe 7.4 on page 272
+data(bmt)
+logrank2=survdiff(Surv(t2,d3)~group,data=bmt,rho=0)
+logrank2
+logrank2$var
+
+
+## Stratified test
+## Example 7.7 on page 220
+
+## The dataset on the textbook website (and in R) is different from the dataset in the textbook on page 12. 
+## Here we correct the dataset so that we have the exact the same dataset as in the textbook.
+## Further more, there are typos in the example 7.7. 
+## " The stratified log-rank test is.... 0.3627 which has a p-value of 0.7169."
+## "...if we perform test only on Hodgkin's disease patients, 
+## we find that the test statistic has a value of 2.52 (p=0.0117),"
+
+data(hodg)
+hodg[23,]=c(2,1,176,1,80,38)
+testdiff=survdiff(Surv(time,delta)~gtype+strata(dtype),data=hodg,rho=0)
+testdiff$obs-testdiff$exp
+testdiff$var
+## Comparing "testdiff" with the test within each strata,
+survdiff(Surv(time,delta)~gtype,data=hodg[hodg$dtype==1,],rho=0)
+survdiff(Surv(time,delta)~gtype,data=hodg[hodg$dtype==2,],rho=0)
+## Comparing "testdiff" with the test ignoring the disease type,
+survdiff(Surv(time,delta)~gtype,data=hodg,rho=0)
+
+
+``````

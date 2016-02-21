@@ -1,0 +1,91 @@
+NAIVE BAYES
+========================
+
+In machine learning, naive Bayes classifiers are a family of simple probabilistic classifiers based on applying Bayes' theorem with strong (naive) independence assumptions between the features.
+
+Naive Bayes has been studied extensively since the 1950s. It was introduced under a different name into the text retrieval community in the early 1960s,[1]:488 and remains a popular (baseline) method for text categorization, the problem of judging **documents as belonging to one category or the other (such as spam or legitimate, sports or politics, etc.) with word frequencies as the features**. With appropriate preprocessing, it is competitive in this domain with more advanced methods including support vector machines.[2] It also finds application in automatic medical diagnosis.[3]
+
+Bibliografía: 
+
+Ver mi tesina final de máster Sorbona.
+
+````{r}
+library (e1071)
+library(mlbench)
+library(plyr)
+
+## Naive Bayes Classifier for Discrete Predictors: we use again the Congressional Voting Records of 1984
+# Note refusals to vote have been treated as missing values!
+
+data (HouseVotes84, package="mlbench") 
+head(data)
+summary(HouseVotes84)
+
+HouseVotes84$ClassZ <- revalue(HouseVotes84$Class, c("republican"="1", "democrat"="0"))
+
+model <- naiveBayes(ClassZ ~ ., data = HouseVotes84) 
+
+# predict the outcome of the first 20 records
+predict(model, HouseVotes84[1:20,-1]) 
+
+# same but displaying posteriors
+pred <- predict(model, HouseVotes84[1:20,-1], type = "raw") 
+prob <- predict(model, HouseVotes84[1:20,-1], prob = TRUE) 
+
+# now all of them: this is the resubstituion error
+clases <- predict(model, HouseVotes84[,-1], type="class")
+
+# form and display confusion matrix & overall accuracy
+tab <- table(clases, HouseVotes84$ClassZ) 
+tab
+sum(tab[row(tab)==col(tab)])/sum(tab)
+
+
+#pr <- prediction(pred,  HouseVotes84$ClassZ)
+#pr <- prediction(as.data.frame(pred),  as.data.frame(HouseVotes84$ClassZ))
+
+
+`````
+
+
+`````{r}
+## using Laplace smoothing: 
+model <- naiveBayes(Class ~ ., data = HouseVotes84, laplace = 3)
+pred <- predict(model, HouseVotes84[,-1]) 
+tab <- table(pred, HouseVotes84$Class) 
+sum(tab[row(tab)==col(tab)])/sum(tab)
+
+# Exercise: redo the example treating refusals to vote as another (third) value
+
+## Example with metric predictors: 
+
+data(iris) 
+m <- naiveBayes (Species ~ ., data = iris) 
+tab <- table(predict(m, iris[,-5]), iris[,5]) 
+sum(tab[row(tab)==col(tab)])/sum(tab)
+
+## the kNN classifier
+
+library (class)
+data(iris3)
+ 
+# 1. using a separate test set
+train <- rbind(iris3[1:25,,1], iris3[1:25,,2], iris3[1:25,,3]) 
+test <- rbind(iris3[26:50,,1], iris3[26:50,,2], iris3[26:50,,3]) 
+cl <- factor(c(rep("s",25), rep("c",25), rep("v",25))) 
+myknn <- knn(train, test, cl, k = 3, prob=TRUE) 
+attributes(.Last.value) 
+tab <- table(myknn, cl) 
+sum(tab[row(tab)==col(tab)])/sum(tab)
+
+# one can use 'knn1' when k=1
+
+# 2. using LOOCV
+
+train <- rbind(iris3[,,1], iris3[,,2], iris3[,,3]) 
+cl <- factor(c(rep("s",50), rep("c",50), rep("v",50)))
+myknn.cv <- knn.cv(train, cl, k = 3, prob = TRUE)
+tab <- table(myknn.cv, cl) 
+sum(tab[row(tab)==col(tab)])/sum(tab)
+
+`````
