@@ -4,6 +4,7 @@ Survival analysis
 Bibliografía:
 
 http://www.mas.ncl.ac.uk/~nmf16/teaching/mas3311/practical1.html
+ftp://ftp.cdc.gov/pub/epodphsi/Espa%F1ol/KAPMEIER.HTM
 
 **Introduction**
 
@@ -48,7 +49,9 @@ where didi is the number of events (deaths) observed at time titi and nini is th
 Censoring is a type of missing data problem common in survival analysis. Other popular comparison methods, such as linear regression and t-tests do not accommodate for censoring. This makes survival analysis attractive for data from randomized clinical studies.
 
 In an ideal scenario, both the birth and death rates of a patient is known, which means the lifetime is known.
+
 Right censoring occurs when the 'death' is unknown, but it is after some known date. e.g. The 'death' occurs after the end of the study, or there was no follow-up with the patient.
+
 Left censoring occurs when the lifetime is known to be less than a certain duration. e.g. Unknown time of initial infection exposure when first meeting with a patient.
 
 
@@ -57,6 +60,28 @@ Left censoring occurs when the lifetime is known to be less than a certain durat
 
 The simplest fit estimates a survival object against an intercept. However, the survfit() function has several optional arguments. For example, we can change the confidence interval using conf.int and conf.type.
 See help(survfit.formula) for the comprehensive documentation.
+
+
+
+**¿Cuál es el objetivo del método de análisis Kaplan-Meier?**
+En epidemiología clínica, aritcularmente en estudios de enfermedades crónicas de desenlace fatal, la medición de la supervivencia de los pacientes se ha convertido en un importante criterio en la evaluación de la efectividad de las alternativas terapueticas.
+ 
+El **objetivo de la metodología de Kaplan-Meier** (KM) es estimar la probabilidad de supervivencia de un grupo de pacientes en un intervalo de tiempo definido (probabilidad condicionada). KM utiliza una función de supervivencia no-paramétrica para un grupo de pacientes (en otras palabras su probabilidad de supervivencia después del momento t ) y por tanto no hace ninguna sunción sobre la distribución de supervivencia.
+
+**¿Para qué sirve KM?**
+Cada vez que se hace un estudio de supervivencia (por ejemplo, un estduio de seguimiento, un ensayo clínico, o un estudio de la ocurrencia de un suceso en el tiempo), la metodología KM puede ser utilizada para estimar la **probabilidad de supervivencia en un periodo de tiempo determinado**. “Sobrevivir” significa que el suceso de interes no ha ocurrido. El suceso puede ser la muerte, una complicación del tratamiento o cualquier otro efecto adverso concreto. KM por tanto proporciona la probabilidad de estar libre del suceso en el tiempo t. Conversely, “1 menos la probbilidadd e estar libre del suceso en el momento t” es la is the probability de tener el suceso en el momento t.
+
+**¿Cuál es la variable estudiada?**
+La variable estudiada es el **tiempo que transcurre hasta que el suceso  (muerte, enfermedad, resultado del tratamiento,etc.)** ocurre. Esta diferencia de tiempo corresponde a la duración de la supervivencia (la diferencia entre la fecha de comienzo de la observación y la de ocurrencia del suceso).
+ 
+Lo que diferencia el análisis de supervivencia de la mayoría de los otros métodos estadísticos es la presencia de **observaciones incompletas**. En un estudio de supervivencia en el que se analizan do tipos de tratamientos,por ejemplo, el análisis de los datos frecuentemente se realiza antes de que algunos pacientes mueran. Para los **sujetos todavía vivos**, lo único que podemos decir es que su supervivencia es mayor que el tiempo obervado hasta la fecha. A tales **obervaciones se las denomina "censadas".** Además hay otras dos fuentes de datos incompletos: los **“perdidos en el seguimiento”** (pacientes perdidos durante la duración del estudio) o los que sufren un suceso distinto del que se está estudiando. Estas observaciones se consideran tambien "censadas". 
+
+Para el análisis de supervivencia se necesita registrar la variable suceso (censada), la variable tiempo, las unidades de tiempo (dia, mes, año), y el grupo al que pertenece cada sujeto (por ejemplo tipo de tratamiento. La variable tiempo debe ser numérica. La variable suceso se codifica: por ejemplo, como 1 si el evento ha ocurrido (dato no censado), “0” si el evento no ha ocurrido (dato censado).A menudo al presentar los datos se especifica el tiempo de supervivencia y se usa el signo “+” para representar los datos censados, así un grupo de datos podría representarse por 8, 11+, 14, 2, 36+, etc.
+ 
+
+**¿Cómo se puede interpretar el resultado de una curva de KM?**
+Si la tasa de supervivencia de un grupo de pacientes a los 5 años de la fecha de comienzo del estudio es de 0.8, esto significa que, en media, 80 de cada 100 pacientes de este grupo estarán vivos a los 5 años. En este ejemplo, la ocurrencia del  suceso es la muerte, pero podría haber sido cualquier otro, por ejemplo la aparición de una complicación durante un tratamiento.
+
 
 `````{r, cache=TRUE}
 library(survival)
@@ -74,9 +99,10 @@ summary(my.KMest)
 `````
 
 ``````{r}
+library(survival)
 
 ## LUNG DATA
-
+data(lung)
 head(lung)
 names(lung)
 
@@ -88,8 +114,17 @@ s <- Surv(lung$time, lung$status)
 lung.KM <- survfit(s~lung$sex)
 lung.KM<-survfit(s~sex,data=lung)
 
-plot(lung.KM)
+plot(lung.KM,lty = 2:3)
+legend(500, .9, c("male", "female"), lty = 2:3, col =c(2,5)) 
+
 summary(lung.KM)
+
+lines(lung.KM[1], lwd=2, col=2, type="s" ,lty= 2) 
+lines(lung.KM[2], lwd=2, col=5, type="s",lty= 3) 
+
+
+#### SEX 1 MALE, SEX 2 FEMALE
+### Los hombres tienen una probabilidad de supervivencia más pequeña a mediad que pasa el tiempo en un cancer del pulmón
 
 `````
 
