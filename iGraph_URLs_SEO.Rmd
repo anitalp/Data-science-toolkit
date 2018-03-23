@@ -1,0 +1,155 @@
+---
+title: "iGraph_URLs_SEO.R"
+author: "Ana Laguna"
+date: "4 de diciembre de 2017"
+output: word_document
+---
+
+Visualizing your site’s Internal Linking
+
+https://data-seo.com/2015/07/07/r-tools-seo-part-1/
+
+https://stackoverflow.com/questions/47641684/labels-on-only-root-and-terminal-vertices-in-igraph-r
+
+http://kateto.net/netscix2016
+```{r}
+
+library(igraph)
+library(dplyr)
+library(sqldf)
+
+file_csv <- "/Users/alaguna/Desktop/Ana/DATOS externos/all_inlinks.csv"
+# import semRush
+## skip first line
+DF <- read.csv("/Users/alaguna/Desktop/Ana/DATOS externos/all_inlinks.csv", header=TRUE, sep = ";", stringsAsFactors = F )
+
+head(DF)
+dim(DF)
+dim(unique(DF))
+
+file_outlinks         <- '/Users/alaguna/Desktop/Ana/DATOS externos/all_inlinks.csv'
+website_url          <- 'https://www.bbva.es'
+
+## we keep only link
+#DF <- DF[DF$Type=="HREF",]
+DF <- select(DF,Source,Destination)
+DF <- as.data.frame(sapply(DF,gsub,pattern=website_url,replacement=""))
+DF <- as.data.frame(sapply(DF,gsub,pattern="\"",replacement=""))
+## delete subdomain
+DF <- subset(DF, !grepl("^http", DF$Source))
+DF <- subset(DF, !grepl("^http", DF$Destination))
+## adapt colnames and rownames
+colnames(DF) <- c("From","To")
+rownames(DF) <- NULL
+
+DF <- unique(DF)
+# generate graph with data.frame
+graphObject = graph.data.frame(DF, directed = TRUE)
+# to run pagerank we need a simple, undirected graph
+graphObject = simplify(as.undirected(graphObject))
+
+
+head(DF)
+
+V(graphObject)$name = V(graphObject)
+
+
+plot(get.edgelist(graphObject))
+
+#edgest
+plot(E(graphObject))
+
+E(graphObject)$name
+
+#vertices
+plot(V(graphObject))
+
+
+e = get.edgelist(graphObject)
+
+# Root vertices are in first column but not in second column
+root = setdiff(e[,1],e[,2])
+
+# Terminal vertices are in second column but not in first column
+terminal = setdiff(e[,2], e[,1])
+
+# Vertices to remove are not in root or terminal vertices
+remove = setdiff(unique(c(e)), c( terminal))
+
+# Remove names of intermediate vertices
+V(graphObject)$name[V(graphObject)$name %in% remove] = ""
+
+g = set.vertex.attribute(graphObject, "name", value=c(1,rep("", length(2:11)),12:21))
+
+
+## FIJO UN NUMERO DE VERTICES
+# summary(as.integer(terminal))
+#    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#   387.0   484.5   554.0   544.2   604.8   650.0 
+
+
+set.seed(2)
+plot(graphObject, 
+     layout=layout.fruchterman.reingold,
+     vertex.size        = 3,          # Smaller nodes
+     vertex.label       =   V(graphObject)     # Set the labels)
+     )
+set.seed(2)
+plot(graphObject, 
+     layout=layout.fruchterman.reingold,
+     vertex.size        = 3,          # Smaller nodes
+     vertex.label       = ifelse(V(graphObject) >= 550 ,  V(graphObject), "")      # Set the labels)
+     )
+
+set.seed(2)
+plot(graphObject, 
+     layout=layout.fruchterman.reingold,
+     vertex.size        = 5,          # Smaller nodes
+     vertex.label       = ifelse(V(graphObject) >= 600 ,  V(graphObject)$name, "")      # Set the labels)
+     )
+
+dataset_far_nodes <- ifelse(V(graphObject) >= 544 ,  V(graphObject)$name, "")
+clean_dataset_far_nodes <- unique(dataset_far_nodes)
+
+````
+
+PageRank
+```{r}
+map <- function(x, range = c(0,1), from.range=NA) {
+  if(any(is.na(from.range))) from.range <- range(x, na.rm=TRUE)
+  
+  ## check if all values are the same
+  if(!diff(from.range)) return(
+    matrix(mean(range), ncol=ncol(x), nrow=nrow(x),
+           dimnames = dimnames(x)))
+  
+  ## map to [0,1]
+  x <- (x-from.range[1])
+  x <- x/diff(from.range)
+  ## handle single values
+  if(diff(from.range) == 0) x <- 0
+  
+  ## map from [0,1] to [range]
+  if (range[1]>range[2]) x <- 1-x
+  x <- x*(abs(diff(range))) + min(range)
+  
+  x[x<min(range) | x>max(range)] <- NA
+  
+  x
+}
+
+# calculate pagerank
+pr <- page.rank(graphObject,directed=TRUE)
+# print graph with size node linked with pagerank
+plot(graphObject, 
+     layout=layout.fruchterman.reingold,
+     vertex.size        = map(pr$vector, c(1,20)),
+     vertex.label       = NA, 
+     vertex.label.color = "black",
+     edge.arrow.size=.2
+)
+```
+
+
+It is very easy to notice that pagerank is badly distributed and internnal linking is unbalanced.
+
