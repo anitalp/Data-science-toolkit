@@ -1,0 +1,457 @@
+---
+title: "AutoEncoders_BBVAdata.Rmd"
+author: "Ana Laguna"
+date: "6 de octubre de 2017"
+output: html_document
+---
+
+```{r}
+##### AUTOENCODERS (anomaly detection)
+
+#https://www.r-bloggers.com/autoencoders-and-anomaly-detection-with-machine-learning-in-fraud-analytics/
+
+
+library(tidyverse)
+library(ggplot2)
+library(h2o)
+library(ggplot2)
+library(dplyr)
+library(plyr)
+library(reshape)
+library(knitr)
+require(scales)
+library(glmnet)
+library(tree)
+library(gbm)
+library(randomForest)
+library(DMwR)
+library(data.table)
+library(xgboost)
+library(pROC)
+library(caret)
+
+
+data <- read.csv("/Users/alaguna/Desktop/Ana/DATOS externos/dataset_seguros_500K.csv")
+
+data %>% ggplot(aes(x = seg_coche)) + geom_bar(color = "grey", fill = "lightgrey") + theme_bw()
+
+table(data$seg_coche)
+# 0      1 
+#485387 (97%)  14612 (3%)
+
+
+
+h2o.init(nthreads = -1)
+
+### convert data to H2OFrame
+data_hf <- as.h2o(data)
+#Then, I am splitting the dataset into training and test sets. Because I want to check how a pre-trained model 
+#with perform, I am splitting my data into two separate training sets and one independent test set for final 
+#model comparison.
+
+splits <- h2o.splitFrame(data_hf, 
+                         ratios = c(0.4, 0.4), 
+                         seed = 42)
+
+train_unsupervised  <- splits[[1]]
+train_supervised  <- splits[[2]]
+test <- splits[[3]]
+
+response <- "seg_coche"
+features <- setdiff(colnames(train_unsupervised), response)
+
+
+#*rm_cols = c('cod_persona', 'prom_seg_coche', 'num_seg_coche', 'total_seguros', 'total_num_seguros', 'algun_seguro', 'seccion_censal', 'estado_cli')
+rm_cols = c('X', 'cod_persona', 'prom_seg_coche', 'num_seg_coche', 
+            'total_seguros', 'total_num_seguros', 'algun_seguro', 
+            'prom_seg_hogar', 'prom_seg_salud', 'prom_seg_otros', 
+            "num_seg_coche","num_seg_hogar","num_seg_salud","num_seg_otros", 
+            "seg_hogar", "seg_salud","seg_otros", 'pago_mensual',
+            'seccion_censal', 'estado_cli',
+            'imp_prima_seg_vinculado','imp_seg_ahorro','imp_prima_seg_hogar','imp_prima_seg_vida','ind_seg_vida', 'ind_seg_vinculado', 'n_meses_ult_seg_ahorro', 'n_meses_ult_seg_hogar', 'n_meses_ult_seg_vida', 'n_meses_ult_seg_vinculado',  'coche_comp',  'salud_comp' ,'vida_comp',   'hogar_comp',  'hogar_bbva',   'salud_bbva' ,'coche_bbva',                'vida_bbva' )
+
+df = train_unsupervised[, -c(which(colnames(train_unsupervised) %in% rm_cols))]
+dim(df)
+
+#--- 2- Tranforming categorical variables to dummies ----
+categorical = c( 'ind_empleado', 'seg_ciclo_vida', 'seg_corporativo', 'seg_financiero', 'seg_nivel_riqueza', 'seg_sexo', 'seg_valor' , 'seg_planuno')
+#*categorical = c('seg_planuno')
+dummies <- dummyVars( paste0("~", paste0(categorical, collapse= " + ")), data = df)
+df_all_ohe <- as.data.frame(predict(dummies, newdata = df))
+df_p <- df[,-c(which(colnames(df) %in% categorical))]
+df_all_combined <- cbind( as.data.frame(df_p), df_all_ohe)
+df = df_all_combined
+rm(df_all_combined)
+rm(df_all_ohe)
+
+
+train_unsupervised <- as.h2o(df)
+
+features <- colnames(train_unsupervised)
+```
+
+
+````{r}
+#####################   Autoencoders ########################
+#First, I am training the unsupervised neural network model using deep learning autoencoders. 
+#With h2o, we can simply set autoencoder = TRUE.
+
+#Here, I am applying a technique called “bottleneck” training, where the hidden layer in the middle is very small.
+#This means that my model will have to reduce the dimensionality of the input data (in this case, down to 2 nodes/dimensions).
+
+#The autoencoder model will then learn the patterns of the input data irrespective of given class labels. 
+#Here, it will learn, which credit card transactions are similar and which transactions are outliers or anomalies. 
+#We need to keep in mind though, that autoencoder models will be sensitive to outliers in our data, 
+#which might throw off otherwise typical patterns.
+
+model_nn <- h2o.deeplearning(x = features,
+                             training_frame = train_unsupervised,
+                             model_id = "model_nn",
+                             autoencoder = TRUE,
+                             reproducible = TRUE, #slow - turn off for real problems
+                             ignore_const_cols = FALSE,
+                             seed = 42,
+                             hidden = c(10, 2, 10), 
+                             epochs = 100,
+                             activation = "Tanh")
+
+
+#Because training can take a while, I am saving the model:
+
+#h2o.saveModel(model_nn, path="model_nn", force = TRUE)
+
+#model_nn <- h2o.loadModel("model_nn")
+model_nn
+## Model Details:
+## ==============
+## 
+## H2OAutoEncoderModel: deeplearning
+## Model ID:  model_nn 
+## Status of Neuron Layers: auto-encoder, gaussian distribution, Quadratic loss, 776 weights/biases, 16.0 KB, 2,622,851 training samples, mini-batch size 1
+##   layer units  type dropout       l1       l2 mean_rate rate_rms momentum
+## 1     1    34 Input  0.00 %                                              
+## 2     2    10  Tanh  0.00 % 0.000000 0.000000  0.709865 0.320108 0.000000
+## 3     3     2  Tanh  0.00 % 0.000000 0.000000  0.048458 0.109033 0.000000
+## 4     4    10  Tanh  0.00 % 0.000000 0.000000  0.164717 0.192053 0.000000
+## 5     5    34  Tanh         0.000000 0.000000  0.369681 0.425672 0.000000
+##   mean_weight weight_rms mean_bias bias_rms
+## 1                                          
+## 2   -0.039307   0.691302  0.008052 0.965178
+## 3   -0.097383   0.314106  0.226376 0.067917
+## 4    0.227664   1.089589  0.112032 0.672444
+## 5    0.011072   0.605586  0.091124 0.722602
+## 
+## 
+## H2OAutoEncoderMetrics: deeplearning
+## ** Reported on training data. **
+## 
+## Training Set Metrics: 
+## =====================
+## 
+## MSE: (Extract with `h2o.mse`) 0.001472071
+## RMSE: (Extract with `h2o.rmse`) 0.03836757
+
+
+
+# Model Details:
+# ==============
+# 
+# H2OAutoEncoderModel: deeplearning
+# Model ID:  model_nn 
+# Status of Neuron Layers: auto-encoder, gaussian distribution, Quadratic loss, 4.283 weights/biases, 84,4 KB, 4.207.854 training samples, mini-batch size 1
+#   layer units  type dropout       l1       l2 mean_rate rate_rms momentum mean_weight weight_rms mean_bias bias_rms
+# 1     1   201 Input  0.00 %                                                                                        
+# 2     2    10  Tanh  0.00 % 0.000000 0.000000  0.123249 0.253483 0.000000    0.156972   0.513711  0.352692 1.934601
+# 3     3     2  Tanh  0.00 % 0.000000 0.000000  0.000374 0.000293 0.000000   -0.186296   0.489603  0.458694 0.074999
+# 4     4    10  Tanh  0.00 % 0.000000 0.000000  0.003538 0.005281 0.000000   -0.080071   1.134907 -0.171762 0.270059
+# 5     5   201  Tanh         0.000000 0.000000  0.129909 0.242973 0.000000   -0.002758   0.542059  0.004852 0.143676
+# 
+# 
+# H2OAutoEncoderMetrics: deeplearning
+# ** Reported on training data. **
+# 
+# Training Set Metrics: 
+# =====================
+# 
+# MSE: (Extract with `h2o.mse`) 0.03263016
+# RMSE: (Extract with `h2o.rmse`) 0.1806382
+
+
+#Convert to autoencoded representation
+test_autoenc <- h2o.predict(model_nn, test)
+
+
+###Anomaly detection
+#We can also ask which instances were considered outliers or anomalies within our test data, 
+#using the h2o.anomaly() function. Based on the autoencoder model that was trained before, 
+#the input data will be reconstructed and for each instance, 
+#the mean squared error (MSE) between actual value and reconstruction is calculated.
+
+#I am also calculating the mean MSE for both class labels.
+
+anomaly <- h2o.anomaly(model_nn, test) %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column() %>%
+  mutate(Class = as.vector(test$seg_coche))
+
+df = as.data.frame(test)
+df<- rownames_to_column(df)
+
+mean_mse <- anomaly %>%
+  group_by(Class) %>%
+  summarise(mean = mean(Reconstruction.MSE))
+
+#This, we can now plot:
+
+max(anomaly$Reconstruction.MSE)
+#[1] 5.759795
+min(anomaly$Reconstruction.MSE)
+#[1] 0.004589919
+mean(anomaly$Reconstruction.MSE)
+#[1] 0.02483876
+
+anomaly_mod <- anomaly[anomaly$Reconstruction.MSE < 5,]
+max(anomaly_mod$Reconstruction.MSE)
+#[1] 0.09249601
+
+ggplot(anomaly_mod, aes(x = as.numeric(rowname), y = Reconstruction.MSE, color = as.factor(Class))) +
+  geom_point(alpha = 0.3) +
+  geom_hline(yintercept = mean_mse$mean) +
+  #geom_hline(data = anomaly_mod, aes(yintercept = mean_mse$mean, color = Class)) +
+  scale_color_brewer(palette = "Set1") +
+  labs(x = "instance number",
+       color = "Class")
+
+
+ggplot(anomaly_mod, aes(x = as.numeric(rowname), y = Reconstruction.MSE, color = as.factor(Class))) +
+  geom_point(alpha = 0.3) +
+  geom_hline(yintercept = 0.031) +
+  #geom_hline(data = anomaly_mod, aes(yintercept = mean_mse$mean, color = Class)) +
+  scale_color_brewer(palette = "Set1") +
+  labs(x = "instance number",
+       color = "Class")
+
+#As we can see in the plot, there is no perfect classification into fraud and non-fraud cases but the mean MSE 
+#is definitely higher for fraudulent transactions than for regular ones.
+
+#We can now identify outlier instances by applying an MSE threshold for what we consider outliers. 
+#We could e.g. say that we consider every instance with an MSE > 0.02 (chosen according to the plot above) 
+#to be an anomaly/outlier.
+
+mean = mean_mse$mean
+#mean = 0.028
+
+anomaly_mod <- anomaly_mod %>%
+  mutate(outlier = ifelse(Reconstruction.MSE > mean, "outlier", "no_outlier"))
+
+# mean = mean_mse$mean ALL FEATURES
+# table(anomaly_mod$Class, anomaly_mod$outlier)
+#      no_outlier outlier
+#   0      36917   59910
+#   1        410    2526
+
+# mean = mean_mse$mean  FEATURES xgboost
+# table(anomaly_mod$Class, anomaly_mod$outlier)
+#        no_outlier outlier
+#  0      53808   43019
+#  1        417    2519
+
+
+#mean = 0,02
+#      no_outlier outlier
+#   0      25641   71186
+#   1         40    2896
+
+
+
+#! Desclicka y vuelve a clickar la librería dplyr en Packages
+anomaly_mod %>%
+  group_by(Class, outlier) %>%
+  summarise(n = n()) %>%
+  mutate(freq = n / sum(n)) 
+
+### TODAS LAS FEATURES  mean = mean_mse$mean
+# A tibble: 4 x 4
+# # Groups:   Class [2]
+#   Class    outlier     n      freq
+#   <int>      <chr> <int>     <dbl>
+# 1     0 no_outlier 36917 0.3812676  #
+# 2     0    outlier 59910 0.6187324  # 61% pasarían de 0s a 1s
+# 3     1 no_outlier   410 0.1396458  # 14% pasarían de 1s a 0s
+# 4     1    outlier  2526 0.8603542     ## 86% PRECISION 1s a 1s
+
+##### LIMPIANDO FEATURES = XGBOOST  mean = 0,02
+# A tibble: 4 x 4
+# Groups:   Class [2]
+#   Class    outlier     n       freq
+#   <int>      <chr> <int>      <dbl>
+# 1     0 no_outlier 25641 0.26481250   ## 26% de 0s se quedan en 0s
+# 2     0    outlier 71186 0.73518750   ## 74% DE 0s a 1s
+# 3     1 no_outlier    40 0.01362398   ## 1 % de 1s a 0s  
+# 4     1    outlier  2896 0.98637602   ## 99% PRECISIÓN 1s a 1s
+
+
+##### LIMPIANDO FEATURES = XGBOOST  mean = mean_mse$mean
+# A tibble: 4 x 4
+# Groups:   Class [2]
+#   Class    outlier     n      freq
+#   <int>      <chr> <int>     <dbl>
+# 1     0 no_outlier 53808 0.5557128  ## 56% DE 0s se quedan en 0s
+# 2     0    outlier 43019 0.4442872  ## 44% DE 0s a 1s
+# 3     1 no_outlier   417 0.1420300  ## 14 % de 1s a 0s 
+# 4     1    outlier  2519 0.8579700  ## 86% PRECISIÓN 1s a 1s
+
+## EJEMPLO DETECCION FRAUDE
+## Source: local data frame [4 x 4]
+## Groups: Class [2]
+## 
+##   Class    outlier     n         freq
+##                  
+## 1     0 no_outlier 56602 0.9994702642
+## 2     0    outlier    30 0.0005297358   ## 0,05% pasarían de 0 a 1
+## 3     1 no_outlier    60 0.6521739130   ## 65% de pérdida de 1s a 0s
+## 4     1    outlier    32 0.3478260870
+
+#As we can see, outlier detection is not sufficient to correctly classify fraudulent credit card transactions 
+#either (at least not with this dataset).
+
+
+##### PLOTTING FEATURES
+
+df_anomaly_mod <- merge(df, anomaly_mod, by="rowname")
+
+# chequeo cruce OK
+# table(df_anomaly_mod$Class, df_anomaly_mod$seg_coche)  
+#    
+#         0     1
+#   0 96827     0
+#   1     0  2936
+
+#TOTALES
+df_anomaly_mod$total_combustible = df_anomaly_mod$prom_combustible * df_anomaly_mod$num_combustible
+df_anomaly_mod$total_mantenimiento_coche = df_anomaly_mod$prom_mantenimiento_coche * df_anomaly_mod$num_mantenimiento_coche
+df_anomaly_mod$total_peajes = df_anomaly_mod$prom_peajes * df_anomaly_mod$num_peajes
+df_anomaly_mod$total_ibi = df_anomaly_mod$imp_mov_ibi_mean * df_anomaly_mod$num_recibos_ibi_total
+df_anomaly_mod$total_ivtm = df_anomaly_mod$imp_mov_ivtm_mean * df_anomaly_mod$num_recibos_ivtm_total
+
+#RELATIVOS
+df_anomaly_mod$rel_combustible = ifelse(df_anomaly_mod$total_combustible == 0, 0, df_anomaly_mod$total_combustible / df_anomaly_mod$gasto_anual)
+df_anomaly_mod$rel_mantenimiento_coche = ifelse(df_anomaly_mod$total_mantenimiento_coche == 0, 0, df_anomaly_mod$total_mantenimiento_coche / df_anomaly_mod$gasto_anual)
+df_anomaly_mod$rel_peajes = ifelse(df_anomaly_mod$total_peajes == 0, 0, df_anomaly_mod$total_peajes / df_anomaly_mod$gasto_anual)
+df_anomaly_mod$rel_ibi = ifelse(df_anomaly_mod$imp_mov_ibi_mean == 0, 0, df_anomaly_mod$imp_mov_ibi_mean / df_anomaly_mod$gasto_anual)
+df_anomaly_mod$rel_ivtm = ifelse(df_anomaly_mod$imp_mov_ivtm_mean == 0, 0, df_anomaly_mod$imp_mov_ivtm_mean / df_anomaly_mod$gasto_anual)
+
+
+
+# p1 = ggplot(df_anomaly_mod, aes(total_combustible, fill = as.factor(outlier))) + 
+#   geom_bar(aes(fill = as.factor(outlier)), position = "fill") + ggtitle('Total_combustible') + theme(legend.position="none") +
+#     scale_fill_manual(name="group", values=c("no_outlier" = "red", "outlier"="blue"), labels=c("outlier"="blue values", "no_outlier"="red values")) 
+
+
+ggplot(df_anomaly_mod[df_anomaly_mod$total_combustible >= 0,], aes(total_combustible, fill = outlier)) + 
+  geom_histogram() + ggtitle(paste(mean, 'total_combustible',collapse=" ")) 
+
+ggplot(df_anomaly_mod[df_anomaly_mod$total_mantenimiento_coche <= 1500,], aes(total_mantenimiento_coche, fill = outlier)) + geom_histogram() + ggtitle(paste(mean, 'total_mantenimiento',collapse=" ")) 
+
+
+
+ggplot(df_anomaly_mod[df_anomaly_mod$total_peajes >= 0,], aes(total_peajes, fill = as.factor(Class))) + 
+  geom_histogram() + ggtitle(paste(mean, 'total_peajes',collapse=" ")) 
+
+
+ggplot(df_anomaly_mod[df_anomaly_mod$total_ivtm <= 0,], aes(total_ivtm, fill = as.factor(Class))) + 
+  geom_histogram() + ggtitle(paste(mean, 'total_ivtm',collapse=" ")) 
+
+
+##PCA
+
+
+pca <- h2o.prcomp(training_frame = train_unsupervised,
+           x = features,
+           validation_frame = train_supervised,
+           transform = "NORMALIZE",
+           k = 3,
+           seed = 42)
+
+pca
+
+eigenvec <- as.data.frame(pca@model$eigenvectors)
+eigenvec$label <- features[1:200]
+
+library(ggrepel)
+
+ggplot(eigenvec, aes(x = pc1, y = pc2, label = label)) +
+  geom_point(color = "navy", alpha = 0.7) +
+  geom_text_repel() +
+  my_theme()
+
+
+###
+df_anomaly_mod[-191]
+nums <- sapply(df_anomaly_mod[-191], is.numeric)
+pca_df <- df_anomaly_mod[-191][ , nums]
+
+badCols <- nearZeroVar(pca_df)
+
+pca_df <- pca_df[, -badCols]
+
+pca_df[ , apply(pca_df, 2, var) != 0]
+
+#nas seccioncensal quitar
+fit<-prcomp(pca_df[-78], scale=TRUE)
+
+library(devtools)
+install_github("vqv/ggbiplot")
+library(ggbiplot)
+
+
+Class<-df_anomaly_mod$Class
+class_pca <- ggbiplot(fit,obs.scale = 1, 
+         var.scale=1,groups=Class,ellipse=F,circle=F,varname.size=3)
+
+
+outlier<-df_anomaly_mod$outlier
+outlier_pca <- ggbiplot(fit,obs.scale = 1, 
+         var.scale=1,groups=outlier,ellipse=F,circle=F,varname.size=3)
+
+
+## ONLY SOME COLUMSN
+#cols <- grep('prom', colnames(pca_df), value=TRUE)
+cols <- grep('gasto', colnames(pca_df), value=TRUE)
+#cols <- grep('imp', colnames(pca_df), value=TRUE)
+#cols <- grep('total', colnames(pca_df), value=TRUE)
+
+head(pca_df[,cols])
+
+fit_col <-prcomp(pca_df[,cols], scale=TRUE)
+
+ ggbiplot(fit_col,obs.scale = 1, 
+         var.scale=1,groups=Class,ellipse=F,circle=F,varname.size=3)
+
+ggbiplot(fit_col,obs.scale = 1, 
+         var.scale=1,groups=outlier,ellipse=F,circle=F,varname.size=3)
+
+
+
+````
+
+
+``````{r}
+
+
+################### Dimensionality reduction with hidden layers ####################
+
+# Because I had used a bottleneck model with two nodes in the hidden layer in the middle, 
+# we can use this dimensionality reduction to explore our feature space 
+# (similar to what to we could do with a principal component analysis). 
+# We can extract this hidden feature with the h2o.deepfeatures() function and plot it to show 
+# the reduced representation of the input data.
+
+train_features <- h2o.deepfeatures(model_nn, train_unsupervised, layer = 2) %>%
+  as.data.frame() %>%
+  mutate(Class = as.vector(train_unsupervised[, 31]))
+
+ggplot(train_features, aes(x = DF.L2.C1, y = DF.L2.C2, color = Class)) +
+  geom_point(alpha = 0.1)
+````
+
